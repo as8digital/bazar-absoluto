@@ -172,3 +172,19 @@ CREATE POLICY "Usuário cria emprego" ON empregos FOR INSERT WITH CHECK (auth.ui
 
 CREATE POLICY "Serviços aprovados públicos" ON servicos FOR SELECT USING (status = 'aprovado');
 CREATE POLICY "Usuário cria serviço" ON servicos FOR INSERT WITH CHECK (auth.uid() = autor_id);
+
+-- Tabela de denúncias (adicionar se não existir)
+CREATE TABLE IF NOT EXISTS denuncias (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+  denunciante_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  motivo TEXT NOT NULL,
+  descricao TEXT,
+  status TEXT DEFAULT 'pendente',
+  criado_em TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE denuncias ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Usuário cria denúncia" ON denuncias FOR INSERT WITH CHECK (auth.uid() = denunciante_id);
+CREATE POLICY "Admin vê denúncias" ON denuncias FOR SELECT USING (true);
+CREATE POLICY "Admin atualiza denúncias" ON denuncias FOR UPDATE USING (true);

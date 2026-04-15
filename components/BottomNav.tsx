@@ -1,22 +1,41 @@
 'use client'
 import { useRouter, usePathname } from 'next/navigation'
-
-const ITENS = [
-  { label: 'Inicio', icon: '🏠', rota: '/feed' },
-  { label: 'Empregos', icon: '💼', rota: '/empregos' },
-  { label: 'Postar', icon: '➕', rota: '/feed?postar=1' },
-  { label: 'Servicos', icon: '🔧', rota: '/servicos' },
-  { label: 'Perfil', icon: '👤', rota: '/perfil' },
-]
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
 
 export default function BottomNav() {
   const router = useRouter()
   const pathname = usePathname()
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    verificarRole()
+  }, [])
+
+  async function verificarRole() {
+    const { data } = await supabase.auth.getUser()
+    if (data.user) {
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single()
+      setIsAdmin(profile?.role === 'admin' || profile?.role === 'moderador')
+    }
+  }
+
+  const ITENS = [
+    { label: 'Início', icon: '🏠', rota: '/feed' },
+    { label: 'Empregos', icon: '💼', rota: '/empregos' },
+    { label: 'Postar', icon: '➕', rota: '/feed' },
+    { label: 'Serviços', icon: '🔧', rota: '/servicos' },
+    { label: 'Perfil', icon: '👤', rota: '/perfil' },
+  ]
+
+  if (isAdmin) {
+    ITENS.push({ label: 'Admin', icon: '⚙️', rota: '/admin' })
+  }
 
   return (
     <div className="bottomnav">
       {ITENS.map((item) => {
-        const ativo = pathname === item.rota.split('?')[0]
+        const ativo = pathname === item.rota
         return (
           <div key={item.label} className="nav-item" onClick={() => router.push(item.rota)}>
             {item.label === 'Postar' ? (
@@ -25,7 +44,7 @@ export default function BottomNav() {
               </div>
             ) : (
               <>
-                <div style={{ fontSize: 20, filter: ativo ? 'none' : 'grayscale(0.5)' }}>{item.icon}</div>
+                <div style={{ fontSize: 20 }}>{item.icon}</div>
                 <span className={`nav-label ${ativo ? 'active' : ''}`}>{item.label}</span>
               </>
             )}

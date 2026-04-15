@@ -1,9 +1,11 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
 export default function TopBar() {
   const [tema, setTema] = useState<'light' | 'dark'>('light')
+  const [isAdmin, setIsAdmin] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -11,7 +13,16 @@ export default function TopBar() {
     const temaSalvo = localStorage.getItem('tema') as 'light' | 'dark' || 'light'
     setTema(temaSalvo)
     document.documentElement.setAttribute('data-theme', temaSalvo)
+    verificarRole()
   }, [])
+
+  async function verificarRole() {
+    const { data } = await supabase.auth.getUser()
+    if (data.user) {
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single()
+      setIsAdmin(profile?.role === 'admin' || profile?.role === 'moderador')
+    }
+  }
 
   function alternarTema() {
     const novoTema = tema === 'light' ? 'dark' : 'light'
@@ -25,7 +36,6 @@ export default function TopBar() {
     { label: '💼 Empregos', rota: '/empregos' },
     { label: '🔧 Serviços', rota: '/servicos' },
     { label: '👤 Perfil', rota: '/perfil' },
-    { label: '⚙️ Admin', rota: '/admin' },
   ]
 
   return (
@@ -38,13 +48,17 @@ export default function TopBar() {
         </div>
       </div>
 
-      {/* Menu Desktop */}
       <nav className="desktop-nav">
         {NAV_ITEMS.map(item => (
           <button key={item.rota} onClick={() => router.push(item.rota)} className={`desktop-nav-item ${pathname === item.rota ? 'active' : ''}`}>
             {item.label}
           </button>
         ))}
+        {isAdmin && (
+          <button onClick={() => router.push('/admin')} className={`desktop-nav-item ${pathname === '/admin' ? 'active' : ''}`} style={{ color: 'var(--gold-dark)', background: 'rgba(255,215,0,0.1)' }}>
+            ⚙️ Admin
+          </button>
+        )}
       </nav>
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
