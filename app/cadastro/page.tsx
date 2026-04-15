@@ -7,11 +7,17 @@ import { supabase } from '@/lib/supabase'
 
 const ESTADOS_EUA = ['Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming']
 
+const PAISES = [
+  { code: '+1', flag: '🇺🇸', nome: 'Estados Unidos' },
+  { code: '+55', flag: '🇧🇷', nome: 'Brasil' },
+]
+
 export default function Cadastro() {
   const router = useRouter()
   const [passo, setPasso] = useState(1)
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState('')
+  const [paisTel, setPaisTel] = useState(PAISES[0])
   const [form, setForm] = useState({
     nome: '', email: '', senha: '', confirmarSenha: '',
     telefone: '', cidade: '', estado: 'Massachusetts',
@@ -28,47 +34,53 @@ export default function Cadastro() {
     if (form.senha.length < 6) { setErro('A senha precisa ter pelo menos 6 caracteres!'); return }
     setCarregando(true)
     setErro('')
-    const { data, error } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.senha,
-      options: {
-        data: {
-          nome: form.nome,
-          telefone: form.telefone,
-          cidade: form.cidade,
-          estado: form.estado,
-          pais_origem: form.paisOrigem,
-          profissao: form.profissao,
-          bio: form.bio,
-          role: 'user'
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.senha,
+        options: {
+          data: {
+            nome: form.nome,
+            telefone: `${paisTel.code} ${form.telefone}`,
+            cidade: form.cidade,
+            estado: form.estado,
+            pais_origem: form.paisOrigem,
+            profissao: form.profissao,
+            bio: form.bio,
+            role: 'user'
+          }
         }
+      })
+      if (error) {
+        if (error.message.includes('already registered')) {
+          setErro('Este email já está cadastrado.')
+        } else {
+          setErro('Erro ao cadastrar. Tente novamente.')
+        }
+      } else {
+        router.push('/feed?bemvindo=1')
       }
-    })
-    if (error) {
-      setErro(error.message === 'User already registered' ? 'Este email já está cadastrado.' : 'Erro ao cadastrar. Tente novamente.')
-    } else {
-      router.push('/feed')
+    } catch (err) {
+      setErro('Erro ao cadastrar. Tente novamente.')
     }
     setCarregando(false)
   }
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-      
       <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-        <div style={{ width: 60, height: 60, background: 'var(--red)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', fontSize: 26, fontWeight: 700, color: 'white' }}>B</div>
+        <div style={{ width: 60, height: 60, background: 'var(--red)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', fontSize: 26, fontWeight: 700, color: 'white', fontFamily: 'Poppins' }}>B</div>
         <div className="logo-text" style={{ fontSize: 20 }}>BAZAR <span>ABSOLUTO</span></div>
         <div className="logo-sub">USA COMMUNITY</div>
       </div>
 
-      {/* Indicador de passos */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         {[1,2].map(n => (
           <div key={n} style={{ width: n === passo ? 32 : 12, height: 6, borderRadius: 3, background: n <= passo ? 'var(--red)' : 'var(--border)', transition: 'all 0.3s' }} />
         ))}
       </div>
 
-      <div className="card" style={{ width: '100%', maxWidth: 400, padding: 24 }}>
+      <div className="card" style={{ width: '100%', maxWidth: 420, padding: 24 }}>
         <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>
           {passo === 1 ? 'Criar sua conta' : 'Sobre você'}
         </h2>
@@ -76,8 +88,8 @@ export default function Cadastro() {
           {passo === 1 ? 'Passo 1 de 2 — Dados de acesso' : 'Passo 2 de 2 — Informações pessoais'}
         </p>
 
-        <form onSubmit={passo === 1 ? (e) => { e.preventDefault(); setPasso(2) } : handleCadastro} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          
+        <form onSubmit={passo === 1 ? (e) => { e.preventDefault(); if (!form.nome || !form.email || !form.telefone || !form.senha) { setErro('Preencha todos os campos obrigatórios!'); return; } if (form.senha !== form.confirmarSenha) { setErro('As senhas não coincidem!'); return; } setErro(''); setPasso(2) } : handleCadastro} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
           {passo === 1 && <>
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Nome completo *</label>
@@ -89,10 +101,15 @@ export default function Cadastro() {
             </div>
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Telefone / WhatsApp *</label>
-              <input className="input-field" type="tel" placeholder="+1 (555) 000-0000" value={form.telefone} onChange={e => atualizar('telefone', e.target.value)} required />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <select value={paisTel.code} onChange={e => setPaisTel(PAISES.find(p => p.code === e.target.value) || PAISES[0])} style={{ background: 'var(--bg-input)', border: '1.5px solid var(--border)', borderRadius: 8, padding: '12px 10px', fontSize: 14, color: 'var(--text-primary)', outline: 'none', fontFamily: 'Nunito', flexShrink: 0 }}>
+                  {PAISES.map(p => <option key={p.code} value={p.code}>{p.flag} {p.code}</option>)}
+                </select>
+                <input className="input-field" type="tel" placeholder="(555) 000-0000" value={form.telefone} onChange={e => atualizar('telefone', e.target.value)} required />
+              </div>
             </div>
             <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Senha *</label>
+              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Senha * (mínimo 6 caracteres)</label>
               <input className="input-field" type="password" placeholder="Mínimo 6 caracteres" value={form.senha} onChange={e => atualizar('senha', e.target.value)} required />
             </div>
             <div>
@@ -116,11 +133,16 @@ export default function Cadastro() {
             </div>
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>País de origem</label>
-              <input className="input-field" placeholder="Ex: Brasil" value={form.paisOrigem} onChange={e => atualizar('paisOrigem', e.target.value)} />
+              <select className="input-field" value={form.paisOrigem} onChange={e => atualizar('paisOrigem', e.target.value)}>
+                <option value="Brasil">🇧🇷 Brasil</option>
+                <option value="Estados Unidos">🇺🇸 Estados Unidos</option>
+                <option value="Portugal">🇵🇹 Portugal</option>
+                <option value="Outro">🌎 Outro</option>
+              </select>
             </div>
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Profissão</label>
-              <input className="input-field" placeholder="Ex: Eletricista, Babá..." value={form.profissao} onChange={e => atualizar('profissao', e.target.value)} />
+              <input className="input-field" placeholder="Ex: Eletricista, Babá, Motorista..." value={form.profissao} onChange={e => atualizar('profissao', e.target.value)} />
             </div>
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Bio (opcional)</label>
@@ -136,7 +158,7 @@ export default function Cadastro() {
           <div style={{ display: 'flex', gap: 10 }}>
             {passo === 2 && <button type="button" className="btn-secondary" onClick={() => setPasso(1)} style={{ width: 'auto', padding: '12px 20px' }}>Voltar</button>}
             <button className="btn-primary" type="submit" disabled={carregando}>
-              {carregando ? 'Cadastrando...' : passo === 1 ? 'Continuar →' : 'Criar conta!'}
+              {carregando ? 'Cadastrando...' : passo === 1 ? 'Continuar →' : '🎉 Criar conta!'}
             </button>
           </div>
         </form>

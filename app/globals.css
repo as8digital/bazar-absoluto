@@ -214,3 +214,96 @@ h1, h2, h3 { font-family: 'Poppins', sans-serif; }
 
 .section-title { font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; padding: 12px 16px 6px; }
 .feed-container { padding-bottom: 80px; }
+
+/* Layout Desktop */
+@media (min-width: 768px) {
+  body {
+    max-width: 100%;
+    background: var(--bg);
+  }
+
+  .app-desktop {
+    display: grid;
+    grid-template-columns: 280px 1fr 300px;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .sidebar-left {
+    position: sticky;
+    top: 80px;
+    height: fit-content;
+  }
+
+  .sidebar-right {
+    position: sticky;
+    top: 80px;
+    height: fit-content;
+  }
+
+  .main-content {
+    max-width: 600px;
+    width: 100%;
+  }
+
+  .topbar {
+    max-width: 100%;
+    padding: 12px 32px;
+  }
+
+  .bottomnav {
+    display: none !important;
+  }
+
+  .desktop-nav {
+    display: flex !important;
+  }
+
+  body {
+    padding-bottom: 0 !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .desktop-nav {
+    display: none !important;
+  }
+  .sidebar-left, .sidebar-right {
+    display: none !important;
+  }
+}
+
+.desktop-nav {
+  display: none;
+  gap: 8px;
+  align-items: center;
+}
+
+.desktop-nav-item {
+  padding: 8px 16px;
+  borderRadius: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.desktop-nav-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.desktop-nav-item.active {
+  color: var(--red);
+  background: rgba(204,0,0,0.08);
+}
