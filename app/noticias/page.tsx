@@ -7,11 +7,8 @@ import MenuAbas from '@/components/MenuAbas'
 import { supabase } from '@/lib/supabase'
 
 const CATEGORIAS = [
-  { id: 'todas', label: '🌎 Todas', query: 'brasileiros Boston Massachusetts immigrants' },
-  { id: 'brasil', label: '🇧🇷 Brasileiros', query: 'Brazilian immigrants Boston Massachusetts community' },
-  { id: 'imigracao', label: '📋 Imigração', query: 'immigration visa work permit Massachusetts 2024' },
-  { id: 'empregos', label: '💼 Empregos', query: 'jobs employment Boston Massachusetts hiring 2024' },
-  { id: 'eventos', label: '🎉 Eventos', query: 'events Boston Massachusetts Brazilian community 2024' },
+  { id: 'geral', label: '📰 Notícias', tipo: 'geral' },
+  { id: 'imigracao', label: '📋 Imigração', tipo: 'imigracao' },
 ]
 
 export default function Noticias() {
@@ -40,20 +37,13 @@ export default function Noticias() {
     setErro('')
     setNoticias([])
     try {
-      const res = await fetch(`/api/noticias?q=${encodeURIComponent(categoria.query)}`)
+      const res = await fetch(`/api/noticias?tipo=${categoria.tipo}`)
       const data = await res.json()
-
-      if (data.status === 'error') {
-        setErro('Não foi possível carregar as notícias agora.')
-        setCarregando(false)
-        return
-      }
-
       if (data.articles) {
         const formatadas = data.articles
           .filter((a: any) => a.title && a.description && a.title !== '[Removed]' && a.url)
           .map((a: any) => ({
-            titulo: a.title?.replace(/ - .*$/, ''),
+            titulo: a.title?.replace(/ - .*$/, '').replace(/ \| .*$/, ''),
             descricao: a.description,
             url: a.url,
             imagem: a.urlToImage,
@@ -61,9 +51,10 @@ export default function Noticias() {
             publicado_em: a.publishedAt,
           }))
         setNoticias(formatadas)
+        if (formatadas.length === 0) setErro('Nenhuma notícia encontrada para esta categoria.')
       }
     } catch (e) {
-      setErro('Erro ao conectar com o serviço de notícias.')
+      setErro('Erro ao carregar notícias. Tente novamente.')
     }
     setCarregando(false)
   }
@@ -95,7 +86,7 @@ export default function Noticias() {
       curtidas: 0,
       comentarios: 0
     })
-    alert('✅ Notícia publicada!')
+    alert('✅ Notícia publicada no feed!')
     setMostrarForm(false)
     setNovaNoticia({ titulo: '', descricao: '', url: '', imagem: '' })
     setPublicando(false)
@@ -129,20 +120,19 @@ export default function Noticias() {
         </div>
       </div>
 
-      {/* Categorias */}
-      <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', display: 'flex', overflowX: 'auto' }}>
+      {/* Apenas 2 categorias */}
+      <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', display: 'flex' }}>
         {CATEGORIAS.map(cat => (
-          <button key={cat.id} onClick={() => setCategoria(cat)} style={{ padding: '10px 14px', fontSize: 12, fontWeight: 700, color: categoria.id === cat.id ? 'var(--red)' : 'var(--text-muted)', background: 'transparent', border: 'none', borderBottom: categoria.id === cat.id ? '3px solid var(--red)' : '3px solid transparent', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Nunito' }}>
+          <button key={cat.id} onClick={() => setCategoria(cat)} style={{ flex: 1, padding: '12px', fontSize: 14, fontWeight: 700, color: categoria.id === cat.id ? 'var(--red)' : 'var(--text-muted)', background: 'transparent', border: 'none', borderBottom: categoria.id === cat.id ? '3px solid var(--red)' : '3px solid transparent', cursor: 'pointer', fontFamily: 'Nunito' }}>
             {cat.label}
           </button>
         ))}
       </div>
 
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '12px 12px 80px' }}>
-        {/* Form manual */}
         {mostrarForm && isAdmin && (
           <div className="card" style={{ padding: 16, marginBottom: 16 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>📝 Publicar notícia manual</h3>
+            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>📝 Publicar notícia</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <input className="input-field" placeholder="Título *" value={novaNoticia.titulo} onChange={e => setNovaNoticia(n => ({ ...n, titulo: e.target.value }))} />
               <textarea className="input-field" placeholder="Texto *" value={novaNoticia.descricao} onChange={e => setNovaNoticia(n => ({ ...n, descricao: e.target.value }))} rows={3} style={{ resize: 'none' }} />
@@ -160,19 +150,12 @@ export default function Noticias() {
           <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text-muted)' }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>⏳</div>
             <p style={{ fontSize: 15, fontWeight: 700 }}>Buscando notícias...</p>
-            <p style={{ fontSize: 13, marginTop: 4 }}>Aguarde um momento</p>
           </div>
         ) : erro ? (
           <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text-muted)' }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>😕</div>
-            <p style={{ fontSize: 15, fontWeight: 700 }}>{erro}</p>
+            <p style={{ fontSize: 14, fontWeight: 600 }}>{erro}</p>
             <button onClick={buscarNoticias} className="btn-primary" style={{ marginTop: 16, width: 'auto', padding: '10px 24px' }}>🔄 Tentar novamente</button>
-          </div>
-        ) : noticias.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text-muted)' }}>
-            <div style={{ fontSize: 56, marginBottom: 16 }}>📰</div>
-            <p style={{ fontSize: 15, fontWeight: 700 }}>Nenhuma notícia encontrada</p>
-            <button onClick={buscarNoticias} className="btn-primary" style={{ marginTop: 16, width: 'auto', padding: '10px 24px' }}>🔄 Atualizar</button>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
