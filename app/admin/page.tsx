@@ -48,10 +48,13 @@ export default function Admin() {
     totalDenuncias: 0, totalComentarios: 0
   })
   const [graficoDias, setGraficoDias] = useState<{ label: string, valor: number }[]>([])
+  const [config, setConfig] = useState({ moderar_posts: true, moderar_comentarios: false, moderar_anuncios: true })
+  const [salvandoConfig, setSalvandoConfig] = useState(false)
 
   useEffect(() => {
     verificarAdmin()
     carregarDados()
+    carregarConfig()
   }, [])
 
   async function verificarAdmin() {
@@ -117,6 +120,18 @@ export default function Admin() {
     setStats(s => ({ ...s, postsPendentes: s.postsPendentes - 1 }))
   }
 
+  async function carregarConfig() {
+    const { data } = await supabase.from('configuracoes').select('*').eq('id', 1).single()
+    if (data) setConfig({ moderar_posts: data.moderar_posts, moderar_comentarios: data.moderar_comentarios, moderar_anuncios: data.moderar_anuncios })
+  }
+
+  async function salvarConfig() {
+    setSalvandoConfig(true)
+    await supabase.from('configuracoes').update({ ...config, atualizado_em: new Date().toISOString() }).eq('id', 1)
+    setSalvandoConfig(false)
+    alert('✅ Configurações salvas!')
+  }
+
   async function resolverDenuncia(id: string, acao: string) {
     await supabase.from('denuncias').update({ status: acao }).eq('id', id)
     setDenuncias(d => d.filter(den => den.id !== id))
@@ -133,6 +148,7 @@ export default function Admin() {
     { id: 'pendentes', label: '⏳ Pendentes', badge: stats.postsPendentes },
     { id: 'usuarios', label: '👥 Usuários', badge: 0 },
     { id: 'denuncias', label: '🚨 Denúncias', badge: stats.totalDenuncias },
+    { id: 'config', label: '⚙️ Config', badge: 0 },
   ]
 
   return (
@@ -295,6 +311,59 @@ export default function Admin() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Configurações */}
+            {aba === 'config' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div className="card" style={{ padding: 16 }}>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, color: 'var(--text-primary)' }}>⚙️ Configurações da Plataforma</h3>
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>Controle o comportamento da plataforma em tempo real</p>
+
+                  {[
+                    { key: 'moderar_posts', label: 'Moderação de posts', desc: 'Quando ativo, posts precisam de aprovação antes de aparecer no feed', icon: '📝' },
+                    { key: 'moderar_comentarios', label: 'Moderação de comentários', desc: 'Quando ativo, comentários precisam de aprovação antes de aparecer', icon: '💬' },
+                    { key: 'moderar_anuncios', label: 'Moderação de anúncios', desc: 'Quando ativo, anúncios de emprego e serviço precisam de aprovação', icon: '📢' },
+                  ].map(item => (
+                    <div key={item.key} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '16px 0', borderBottom: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: 24, flexShrink: 0 }}>{item.icon}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>{item.label}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>{item.desc}</div>
+                      </div>
+                      <div
+                        onClick={() => setConfig(c => ({ ...c, [item.key]: !c[item.key as keyof typeof c] }))}
+                        style={{ width: 52, height: 28, borderRadius: 14, background: config[item.key as keyof typeof config] ? 'var(--red)' : 'var(--border)', cursor: 'pointer', position: 'relative', transition: 'background 0.3s', flexShrink: 0 }}
+                      >
+                        <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'white', position: 'absolute', top: 3, left: config[item.key as keyof typeof config] ? 27 : 3, transition: 'left 0.3s', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
+                      </div>
+                    </div>
+                  ))}
+
+                  <button onClick={salvarConfig} disabled={salvandoConfig} className="btn-primary" style={{ marginTop: 20, fontSize: 14 }}>
+                    {salvandoConfig ? '⏳ Salvando...' : '💾 Salvar configurações'}
+                  </button>
+                </div>
+
+                <div className="card" style={{ padding: 16 }}>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, color: 'var(--text-primary)' }}>📊 Status atual</h3>
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>Resumo das configurações ativas</p>
+                  {[
+                    { label: 'Posts', status: config.moderar_posts ? 'Com moderação' : 'Livres', cor: config.moderar_posts ? 'orange' : '#2E7D32' },
+                    { label: 'Comentários', status: config.moderar_comentarios ? 'Com moderação' : 'Livres', cor: config.moderar_comentarios ? 'orange' : '#2E7D32' },
+                    { label: 'Anúncios', status: config.moderar_anuncios ? 'Com moderação' : 'Livres', cor: config.moderar_anuncios ? 'orange' : '#2E7D32' },
+                  ].map(s => (
+                    <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                      <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>{s.label}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: s.cor }}>{s.status}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <button style={{ width: '100%', padding: '14px', background: 'var(--blue-dark)', color: 'white', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Nunito' }}>
+                  📢 Enviar comunicado para todos os membros
+                </button>
               </div>
             )}
           </>

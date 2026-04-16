@@ -24,13 +24,9 @@ export default function BottomNav() {
     { label: 'Início', icon: '🏠', rota: '/feed' },
     { label: 'Empregos', icon: '💼', rota: '/empregos' },
     { label: 'Postar', icon: '➕', rota: '/feed' },
-    { label: 'Serviços', icon: '🔧', rota: '/servicos' },
+    { label: 'Notícias', icon: '📰', rota: '/noticias' },
     { label: 'Perfil', icon: '👤', rota: '/perfil' },
   ]
-
-  if (isAdmin) {
-    ITENS.push({ label: 'Admin', icon: '⚙️', rota: '/admin' })
-  }
 
   return (
     <div className="bottomnav">
