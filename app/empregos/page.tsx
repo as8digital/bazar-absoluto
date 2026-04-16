@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { useState } from 'react'
 import TopBar from '@/components/TopBar'
 import BottomNav from '@/components/BottomNav'
+import MenuAbas from '@/components/MenuAbas'
 import { supabase } from '@/lib/supabase'
 
 const EMPREGOS_DEMO = [
@@ -52,6 +53,7 @@ export default function Empregos() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <TopBar />
+      <MenuAbas />
 
       <div style={{ background: 'var(--blue-dark)', padding: '20px 16px' }}>
         <h1 style={{ color: 'white', fontSize: 20, fontWeight: 700, marginBottom: 4 }}>💼 Empregos</h1>

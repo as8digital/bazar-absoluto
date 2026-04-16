@@ -35,6 +35,7 @@ export default function TopBar() {
     { label: '🏠 Feed', rota: '/feed' },
     { label: '💼 Empregos', rota: '/empregos' },
     { label: '🔧 Serviços', rota: '/servicos' },
+    { label: '📰 Notícias', rota: '/noticias' },
     { label: '👤 Perfil', rota: '/perfil' },
   ]
 

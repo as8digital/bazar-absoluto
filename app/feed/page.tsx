@@ -132,7 +132,19 @@ function PostCard({ post, usuarioId }: { post: any, usuarioId: string }) {
         </div>
         {post.conteudo && <div style={{ padding: '0 14px 12px', fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.6 }}>{post.conteudo}</div>}
         {post.imagem_url && <img src={post.imagem_url} alt="Post" style={{ width: '100%', maxHeight: 500, objectFit: 'cover', display: 'block' }} />}
-        {post.video_url && <video controls style={{ width: '100%', maxHeight: 400 }}><source src={post.video_url} /></video>}
+        {post.video_url && (
+          <video
+            controls
+            preload="metadata"
+            style={{ width: '100%', maxHeight: 400, background: '#000', display: 'block' }}
+            onLoadedMetadata={e => {
+              const v = e.currentTarget
+              v.currentTime = 1
+            }}
+          >
+            <source src={post.video_url} />
+          </video>
+        )}
         <div style={{ padding: '6px 14px', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--text-muted)' }}>
             <div style={{ width: 20, height: 20, background: 'var(--red)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'white' }}>♥</div>
@@ -315,7 +327,7 @@ function FeedContent() {
       )}
 
       {/* Abas */}
-      <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', display: 'flex' }}>
+      <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', display: 'flex', position: 'sticky', top: 56, zIndex: 99 }}>
         {[
           { label: 'Feed', rota: '/feed' },
           { label: 'Empregos', rota: '/empregos' },

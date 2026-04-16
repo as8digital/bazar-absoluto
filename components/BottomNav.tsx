@@ -8,9 +8,7 @@ export default function BottomNav() {
   const pathname = usePathname()
   const [isAdmin, setIsAdmin] = useState(false)
 
-  useEffect(() => {
-    verificarRole()
-  }, [])
+  useEffect(() => { verificarRole() }, [])
 
   async function verificarRole() {
     const { data } = await supabase.auth.getUser()
@@ -23,18 +21,18 @@ export default function BottomNav() {
   const ITENS = [
     { label: 'Início', icon: '🏠', rota: '/feed' },
     { label: 'Empregos', icon: '💼', rota: '/empregos' },
-    { label: 'Postar', icon: '➕', rota: '/feed' },
+    { label: 'Postar', icon: '➕', rota: '/feed', isPostar: true },
+    { label: 'Serviços', icon: '🔧', rota: '/servicos' },
     { label: 'Notícias', icon: '📰', rota: '/noticias' },
-    { label: 'Perfil', icon: '👤', rota: '/perfil' },
   ]
 
   return (
     <div className="bottomnav">
       {ITENS.map((item) => {
-        const ativo = pathname === item.rota
+        const ativo = pathname === item.rota && !item.isPostar
         return (
           <div key={item.label} className="nav-item" onClick={() => router.push(item.rota)}>
-            {item.label === 'Postar' ? (
+            {item.isPostar ? (
               <div style={{ width: 44, height: 44, background: 'var(--red)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginTop: -16, boxShadow: '0 4px 12px rgba(204,0,0,0.4)' }}>
                 {item.icon}
               </div>
