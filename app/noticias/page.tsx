@@ -62,10 +62,15 @@ export default function Noticias() {
   async function publicarNoFeed(noticia: any) {
     const { data: user } = await supabase.auth.getUser()
     if (!user.user) return
+    // Salva o link junto com o conteúdo de forma estruturada
+    const conteudo = `📰 **${noticia.titulo}**\n\n${noticia.descricao}`
     await supabase.from('posts').insert({
       autor_id: user.user.id,
-      conteudo: `📰 ${noticia.titulo}\n\n${noticia.descricao}\n\n🔗 ${noticia.url}`,
+      conteudo,
       imagem_url: noticia.imagem || null,
+      link_url: noticia.url || null,
+      link_titulo: noticia.titulo,
+      link_fonte: noticia.fonte,
       status: 'aprovado',
       curtidas: 0,
       comentarios: 0
@@ -80,8 +85,10 @@ export default function Noticias() {
     if (!user.user) { setPublicando(false); return }
     await supabase.from('posts').insert({
       autor_id: user.user.id,
-      conteudo: `📰 ${novaNoticia.titulo}\n\n${novaNoticia.descricao}${novaNoticia.url ? '\n\n🔗 ' + novaNoticia.url : ''}`,
+      conteudo: `📰 **${novaNoticia.titulo}**\n\n${novaNoticia.descricao}`,
       imagem_url: novaNoticia.imagem || null,
+      link_url: novaNoticia.url || null,
+      link_titulo: novaNoticia.titulo,
       status: 'aprovado',
       curtidas: 0,
       comentarios: 0

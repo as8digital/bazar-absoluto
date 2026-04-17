@@ -198,19 +198,22 @@ function PostCard({ post, usuarioId }: { post: any, usuarioId: string }) {
           </div>
         </div>
         {post.conteudo && <div style={{ padding: '0 14px 12px', fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.6 }}>{post.conteudo}</div>}
-        {post.imagem_url && <img src={post.imagem_url} alt="Post" style={{ width: '100%', maxHeight: 500, objectFit: 'cover', display: 'block' }} />}
+        {post.imagem_url && !post.link_url && <img src={post.imagem_url} alt="Post" style={{ width: '100%', maxHeight: 500, objectFit: 'cover', display: 'block' }} />}
         {post.video_url && (
-          <video
-            controls
-            preload="metadata"
-            style={{ width: '100%', maxHeight: 400, background: '#000', display: 'block' }}
-            onLoadedMetadata={e => {
-              const v = e.currentTarget
-              v.currentTime = 1
-            }}
-          >
+          <video controls preload="metadata" style={{ width: '100%', maxHeight: 400, background: '#000', display: 'block' }} onLoadedMetadata={e => { const v = e.currentTarget; v.currentTime = 1 }}>
             <source src={post.video_url} />
           </video>
+        )}
+        {/* Card de notícia com link */}
+        {post.link_url && (
+          <a href={post.link_url} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', display: 'block', margin: '0 14px 12px', border: '1.5px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+            {post.imagem_url && <img src={post.imagem_url} alt="Notícia" style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }} onError={e => (e.currentTarget.style.display = 'none')} />}
+            <div style={{ padding: '10px 12px', background: 'var(--bg-input)' }}>
+              {post.link_fonte && <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase' }}>{post.link_fonte}</div>}
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.4, marginBottom: 6 }}>{post.link_titulo || post.conteudo?.split('\n')[0]}</div>
+              <div style={{ fontSize: 12, color: 'var(--red)', fontWeight: 700 }}>Ler matéria completa →</div>
+            </div>
+          </a>
         )}
         <div style={{ padding: '6px 14px', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--text-muted)' }}>
@@ -287,10 +290,18 @@ function FeedContent() {
         autor_cidade: p.profiles?.cidade || '',
         autor_estado: p.profiles?.estado || '',
         autor_foto: p.profiles?.foto_url,
-        conteudo: p.conteudo, imagem_url: p.imagem_url, video_url: p.video_url,
-        curtidas: p.curtidas || 0, comentarios: p.comentarios || 0,
-        criado_em: p.criado_em, patrocinado: p.patrocinado,
-        autor_role: p.profiles?.role, status: p.status
+        conteudo: p.conteudo,
+        imagem_url: p.imagem_url,
+        video_url: p.video_url,
+        link_url: p.link_url,
+        link_titulo: p.link_titulo,
+        link_fonte: p.link_fonte,
+        curtidas: p.curtidas || 0,
+        comentarios: p.comentarios || 0,
+        criado_em: p.criado_em,
+        patrocinado: p.patrocinado,
+        autor_role: p.profiles?.role,
+        status: p.status
       })))
     }
   }
