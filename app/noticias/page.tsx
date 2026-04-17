@@ -6,23 +6,18 @@ import BottomNav from '@/components/BottomNav'
 import MenuAbas from '@/components/MenuAbas'
 import { supabase } from '@/lib/supabase'
 
-const CATEGORIAS = [
-  { id: 'geral', label: '📰 Notícias', tipo: 'geral' },
-  { id: 'imigracao', label: '📋 Imigração', tipo: 'imigracao' },
-]
-
 export default function Noticias() {
   const [noticias, setNoticias] = useState<any[]>([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
-  const [categoria, setCategoria] = useState(CATEGORIAS[0])
+  const [tipo, setTipo] = useState('geral')
   const [perfil, setPerfil] = useState<any>(null)
   const [mostrarForm, setMostrarForm] = useState(false)
   const [publicando, setPublicando] = useState(false)
-  const [novaNoticia, setNovaNoticia] = useState({ titulo: '', descricao: '', url: '', imagem: '' })
+  const [form, setForm] = useState({ titulo: '', descricao: '', url: '', imagem: '' })
 
   useEffect(() => { carregarPerfil() }, [])
-  useEffect(() => { buscarNoticias() }, [categoria])
+  useEffect(() => { buscarNoticias() }, [tipo])
 
   async function carregarPerfil() {
     const { data } = await supabase.auth.getUser()
@@ -37,24 +32,22 @@ export default function Noticias() {
     setErro('')
     setNoticias([])
     try {
-      const res = await fetch(`/api/noticias?tipo=${categoria.tipo}`)
+      const res = await fetch(`/api/noticias?tipo=${tipo}&t=${Date.now()}`)
       const data = await res.json()
-      if (data.articles) {
-        const formatadas = data.articles
-          .filter((a: any) => a.title && a.description && a.title !== '[Removed]' && a.url)
-          .map((a: any) => ({
-            titulo: a.title?.replace(/ - .*$/, '').replace(/ \| .*$/, ''),
-            descricao: a.description,
-            url: a.url,
-            imagem: a.urlToImage,
-            fonte: a.source?.name || 'Notícia',
-            publicado_em: a.publishedAt,
-          }))
-        setNoticias(formatadas)
-        if (formatadas.length === 0) setErro('Nenhuma notícia encontrada para esta categoria.')
+      if (data.articles?.length > 0) {
+        setNoticias(data.articles.filter((a: any) => a.title && a.description && a.title !== '[Removed]').map((a: any) => ({
+          titulo: a.title?.replace(/ [-|] .*$/, ''),
+          descricao: a.description,
+          url: a.url,
+          imagem: a.urlToImage,
+          fonte: a.source?.name || 'Notícia',
+          publicado_em: a.publishedAt,
+        })))
+      } else {
+        setErro('Nenhuma notícia encontrada. Tente atualizar.')
       }
-    } catch (e) {
-      setErro('Erro ao carregar notícias. Tente novamente.')
+    } catch {
+      setErro('Erro ao carregar. Tente novamente.')
     }
     setCarregando(false)
   }
@@ -62,13 +55,11 @@ export default function Noticias() {
   async function publicarNoFeed(noticia: any) {
     const { data: user } = await supabase.auth.getUser()
     if (!user.user) return
-    // Salva o link junto com o conteúdo de forma estruturada
-    const conteudo = `📰 **${noticia.titulo}**\n\n${noticia.descricao}`
     await supabase.from('posts').insert({
       autor_id: user.user.id,
-      conteudo,
+      conteudo: `📰 ${noticia.titulo}\n\n${noticia.descricao}`,
       imagem_url: noticia.imagem || null,
-      link_url: noticia.url || null,
+      link_url: noticia.url,
       link_titulo: noticia.titulo,
       link_fonte: noticia.fonte,
       status: 'aprovado',
@@ -79,29 +70,29 @@ export default function Noticias() {
   }
 
   async function publicarManual() {
-    if (!novaNoticia.titulo || !novaNoticia.descricao) return
+    if (!form.titulo || !form.descricao) return
     setPublicando(true)
     const { data: user } = await supabase.auth.getUser()
     if (!user.user) { setPublicando(false); return }
     await supabase.from('posts').insert({
       autor_id: user.user.id,
-      conteudo: `📰 **${novaNoticia.titulo}**\n\n${novaNoticia.descricao}`,
-      imagem_url: novaNoticia.imagem || null,
-      link_url: novaNoticia.url || null,
-      link_titulo: novaNoticia.titulo,
+      conteudo: `📰 ${form.titulo}\n\n${form.descricao}`,
+      imagem_url: form.imagem || null,
+      link_url: form.url || null,
+      link_titulo: form.titulo,
+      link_fonte: 'Bazar Absoluto USA',
       status: 'aprovado',
       curtidas: 0,
       comentarios: 0
     })
-    alert('✅ Notícia publicada no feed!')
+    alert('✅ Notícia publicada!')
     setMostrarForm(false)
-    setNovaNoticia({ titulo: '', descricao: '', url: '', imagem: '' })
+    setForm({ titulo: '', descricao: '', url: '', imagem: '' })
     setPublicando(false)
   }
 
-  const tempo = (data: string) => {
-    const diff = Date.now() - new Date(data).getTime()
-    const h = Math.floor(diff / 3600000)
+  const tempo = (d: string) => {
+    const h = Math.floor((Date.now() - new Date(d).getTime()) / 3600000)
     if (h < 1) return 'agora'
     if (h < 24) return `há ${h}h`
     return `há ${Math.floor(h / 24)} dias`
@@ -129,14 +120,18 @@ export default function Noticias() {
 
       {/* Apenas 2 categorias */}
       <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', display: 'flex' }}>
-        {CATEGORIAS.map(cat => (
-          <button key={cat.id} onClick={() => setCategoria(cat)} style={{ flex: 1, padding: '12px', fontSize: 14, fontWeight: 700, color: categoria.id === cat.id ? 'var(--red)' : 'var(--text-muted)', background: 'transparent', border: 'none', borderBottom: categoria.id === cat.id ? '3px solid var(--red)' : '3px solid transparent', cursor: 'pointer', fontFamily: 'Nunito' }}>
+        {[
+          { id: 'geral', label: '📰 Notícias' },
+          { id: 'imigracao', label: '📋 Imigração' },
+        ].map(cat => (
+          <button key={cat.id} onClick={() => setTipo(cat.id)} style={{ flex: 1, padding: '12px', fontSize: 14, fontWeight: 700, color: tipo === cat.id ? 'var(--red)' : 'var(--text-muted)', background: 'transparent', border: 'none', borderBottom: tipo === cat.id ? '3px solid var(--red)' : '3px solid transparent', cursor: 'pointer', fontFamily: 'Nunito' }}>
             {cat.label}
           </button>
         ))}
       </div>
 
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '12px 12px 80px' }}>
+        {/* Form Ronaldo Absoluto Informa */}
         {mostrarForm && isAdmin && (
           <div className="card" style={{ padding: 16, marginBottom: 16, border: '2px solid var(--gold)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
@@ -147,16 +142,13 @@ export default function Noticias() {
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <input className="input-field" placeholder="Título da notícia *" value={novaNoticia.titulo} onChange={e => setNovaNoticia(n => ({ ...n, titulo: e.target.value }))} />
-              <textarea className="input-field" placeholder="Escreva a notícia aqui... *" value={novaNoticia.descricao} onChange={e => setNovaNoticia(n => ({ ...n, descricao: e.target.value }))} rows={4} style={{ resize: 'none' }} />
-              <input className="input-field" placeholder="Link de referência (opcional)" value={novaNoticia.url} onChange={e => setNovaNoticia(n => ({ ...n, url: e.target.value }))} />
-              <input className="input-field" placeholder="Link da imagem (opcional)" value={novaNoticia.imagem} onChange={e => setNovaNoticia(n => ({ ...n, imagem: e.target.value }))} />
-              <div style={{ background: 'rgba(255,215,0,0.1)', borderRadius: 8, padding: '8px 12px' }}>
-                <p style={{ fontSize: 11, color: 'var(--gold-dark)' }}>⭐ Esta notícia aparecerá no feed com destaque como publicação oficial do Bazar Absoluto USA</p>
-              </div>
+              <input className="input-field" placeholder="Título *" value={form.titulo} onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))} />
+              <textarea className="input-field" placeholder="Texto da notícia *" value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} rows={4} style={{ resize: 'none' }} />
+              <input className="input-field" placeholder="Link da matéria (opcional)" value={form.url} onChange={e => setForm(f => ({ ...f, url: e.target.value }))} />
+              <input className="input-field" placeholder="Link da imagem (opcional)" value={form.imagem} onChange={e => setForm(f => ({ ...f, imagem: e.target.value }))} />
               <div style={{ display: 'flex', gap: 8 }}>
                 <button className="btn-secondary" style={{ fontSize: 13 }} onClick={() => setMostrarForm(false)}>Cancelar</button>
-                <button className="btn-primary" style={{ fontSize: 13 }} onClick={publicarManual} disabled={publicando}>{publicando ? '⏳' : '📤 Publicar agora'}</button>
+                <button className="btn-primary" style={{ fontSize: 13 }} onClick={publicarManual} disabled={publicando}>{publicando ? '⏳' : '📤 Publicar'}</button>
               </div>
             </div>
           </div>
@@ -170,31 +162,25 @@ export default function Noticias() {
         ) : erro ? (
           <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text-muted)' }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>😕</div>
-            <p style={{ fontSize: 14, fontWeight: 600 }}>{erro}</p>
-            <button onClick={buscarNoticias} className="btn-primary" style={{ marginTop: 16, width: 'auto', padding: '10px 24px' }}>🔄 Tentar novamente</button>
+            <p style={{ fontSize: 14 }}>{erro}</p>
+            <button onClick={buscarNoticias} className="btn-primary" style={{ marginTop: 16, width: 'auto', padding: '10px 24px' }}>🔄 Atualizar</button>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {noticias.map((noticia, i) => (
+            {noticias.map((n, i) => (
               <div key={i} className="card" style={{ overflow: 'hidden' }}>
-                {noticia.imagem && (
-                  <img src={noticia.imagem} alt={noticia.titulo} style={{ width: '100%', height: 180, objectFit: 'cover' }} onError={e => (e.currentTarget.style.display = 'none')} />
-                )}
+                {n.imagem && <img src={n.imagem} alt={n.titulo} style={{ width: '100%', height: 180, objectFit: 'cover', display: 'block' }} onError={e => (e.currentTarget.style.display = 'none')} />}
                 <div style={{ padding: 14 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 11, background: 'var(--blue-dark)', color: 'white', padding: '2px 8px', borderRadius: 6, fontWeight: 700 }}>{noticia.fonte}</span>
-                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>🕐 {tempo(noticia.publicado_em)}</span>
+                    <span style={{ fontSize: 11, background: 'var(--blue-dark)', color: 'white', padding: '2px 8px', borderRadius: 6, fontWeight: 700 }}>{n.fonte}</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>🕐 {tempo(n.publicado_em)}</span>
                     {isAdmin && (
-                      <button onClick={() => publicarNoFeed(noticia)} style={{ marginLeft: 'auto', background: 'rgba(204,0,0,0.1)', color: 'var(--red)', border: '1px solid var(--red)', borderRadius: 6, padding: '3px 10px', fontSize: 11, cursor: 'pointer', fontFamily: 'Nunito', fontWeight: 700 }}>
-                        + Feed
-                      </button>
+                      <button onClick={() => publicarNoFeed(n)} style={{ marginLeft: 'auto', background: 'rgba(204,0,0,0.1)', color: 'var(--red)', border: '1px solid var(--red)', borderRadius: 6, padding: '3px 10px', fontSize: 11, cursor: 'pointer', fontFamily: 'Nunito', fontWeight: 700 }}>+ Feed</button>
                     )}
                   </div>
-                  <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, lineHeight: 1.4 }}>{noticia.titulo}</h3>
-                  <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 12 }}>{noticia.descricao}</p>
-                  <a href={noticia.url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: 'var(--red)', fontWeight: 700, textDecoration: 'none' }}>
-                    Ler notícia completa →
-                  </a>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, lineHeight: 1.4 }}>{n.titulo}</h3>
+                  <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 12 }}>{n.descricao}</p>
+                  <a href={n.url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: 'var(--red)', fontWeight: 700, textDecoration: 'none' }}>Ler notícia completa →</a>
                 </div>
               </div>
             ))}

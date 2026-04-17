@@ -6,17 +6,6 @@ import { supabase } from '@/lib/supabase'
 export default function BottomNav() {
   const router = useRouter()
   const pathname = usePathname()
-  const [isAdmin, setIsAdmin] = useState(false)
-
-  useEffect(() => { verificarRole() }, [])
-
-  async function verificarRole() {
-    const { data } = await supabase.auth.getUser()
-    if (data.user) {
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single()
-      setIsAdmin(profile?.role === 'admin' || profile?.role === 'moderador')
-    }
-  }
 
   const ITENS = [
     { label: 'Início', icon: '🏠', rota: '/feed' },
