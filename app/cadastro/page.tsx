@@ -1,6 +1,6 @@
 'use client'
 export const dynamic = 'force-dynamic'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase'
 const ESTADOS_EUA = ['Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming']
 
 const PAISES = [
-  { code: '+1', flag: '🇺🇸', nome: 'Estados Unidos' },
+  { code: '+1', flag: '🇺🇸', nome: 'EUA' },
   { code: '+55', flag: '🇧🇷', nome: 'Brasil' },
 ]
 
@@ -18,6 +18,11 @@ export default function Cadastro() {
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState('')
   const [paisTel, setPaisTel] = useState(PAISES[0])
+  const [selfiePreview, setSelfiePreview] = useState<string | null>(null)
+  const [selfieFile, setSelfieFile] = useState<File | null>(null)
+  const [aceitouTermos, setAceitouTermos] = useState(false)
+  const selfieRef = useRef<HTMLInputElement>(null)
+  const cameraRef = useRef<HTMLInputElement>(null)
   const [form, setForm] = useState({
     nome: '', email: '', senha: '', confirmarSenha: '',
     telefone: '', cidade: '', estado: 'Massachusetts',
@@ -28,13 +33,43 @@ export default function Cadastro() {
     setForm(f => ({ ...f, [campo]: valor }))
   }
 
+  function passarPasso1(e: React.FormEvent) {
+    e.preventDefault()
+    if (!form.nome || !form.email || !form.telefone || !form.senha) { setErro('Preencha todos os campos obrigatórios!'); return }
+    if (form.senha !== form.confirmarSenha) { setErro('As senhas não coincidem!'); return }
+    if (form.senha.length < 6) { setErro('Senha precisa ter pelo menos 6 caracteres!'); return }
+    setErro(''); setPasso(2)
+  }
+
+  function passarPasso2(e: React.FormEvent) {
+    e.preventDefault()
+    if (!form.cidade) { setErro('Preencha sua cidade!'); return }
+    setErro(''); setPasso(3)
+  }
+
   async function handleCadastro(e: React.FormEvent) {
     e.preventDefault()
-    if (form.senha !== form.confirmarSenha) { setErro('As senhas não coincidem!'); return }
-    if (form.senha.length < 6) { setErro('A senha precisa ter pelo menos 6 caracteres!'); return }
+    if (!selfieFile) { setErro('A selfie é obrigatória para verificação!'); return }
+    if (!aceitouTermos) { setErro('Você precisa aceitar os Termos de Uso!'); return }
     setCarregando(true)
     setErro('')
+
     try {
+      // Upload da selfie
+      let selfieUrl = null
+      if (selfieFile) {
+        const formData = new FormData()
+        formData.append('file', selfieFile)
+        formData.append('upload_preset', 'bazar_absoluto')
+        formData.append('folder', 'verificacoes')
+        const res = await fetch(
+          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+          { method: 'POST', body: formData }
+        )
+        const data = await res.json()
+        selfieUrl = data.secure_url
+      }
+
       const { error } = await supabase.auth.signUp({
         email: form.email,
         password: form.senha,
@@ -47,49 +82,55 @@ export default function Cadastro() {
             pais_origem: form.paisOrigem,
             profissao: form.profissao,
             bio: form.bio,
+            selfie_url: selfieUrl,
             role: 'user'
           }
         }
       })
+
       if (error) {
-        if (error.message.includes('already registered')) {
-          setErro('Este email já está cadastrado.')
-        } else {
-          setErro('Erro ao cadastrar. Tente novamente.')
-        }
+        setErro(error.message.includes('already registered') ? 'Este email já está cadastrado.' : 'Erro ao cadastrar. Tente novamente.')
       } else {
         router.push('/feed?bemvindo=1')
       }
-    } catch (err) {
+    } catch {
       setErro('Erro ao cadastrar. Tente novamente.')
     }
     setCarregando(false)
   }
 
+  const PASSOS = ['Dados', 'Perfil', 'Verificação']
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-      <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
         <div style={{ width: 60, height: 60, background: 'var(--red)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', fontSize: 26, fontWeight: 700, color: 'white', fontFamily: 'Poppins' }}>B</div>
         <div className="logo-text" style={{ fontSize: 20 }}>BAZAR <span>ABSOLUTO</span></div>
         <div className="logo-sub">USA COMMUNITY</div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        {[1,2].map(n => (
-          <div key={n} style={{ width: n === passo ? 32 : 12, height: 6, borderRadius: 3, background: n <= passo ? 'var(--red)' : 'var(--border)', transition: 'all 0.3s' }} />
+      {/* Indicador de passos */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 20, alignItems: 'center' }}>
+        {PASSOS.map((p, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: i + 1 <= passo ? 28 : 24, height: i + 1 <= passo ? 28 : 24, borderRadius: '50%', background: i + 1 <= passo ? 'var(--red)' : 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: i + 1 <= passo ? 'white' : 'var(--text-muted)', transition: 'all 0.3s' }}>{i + 1}</div>
+            <span style={{ fontSize: 11, color: i + 1 === passo ? 'var(--red)' : 'var(--text-muted)', fontWeight: 600, display: 'none' }}>{p}</span>
+            {i < PASSOS.length - 1 && <div style={{ width: 20, height: 2, background: i + 1 < passo ? 'var(--red)' : 'var(--border)', borderRadius: 1 }} />}
+          </div>
         ))}
       </div>
 
       <div className="card" style={{ width: '100%', maxWidth: 420, padding: 24 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>
-          {passo === 1 ? 'Criar sua conta' : 'Sobre você'}
+        <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>
+          {passo === 1 ? 'Criar sua conta' : passo === 2 ? 'Sobre você' : '📸 Verificação de identidade'}
         </h2>
         <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20 }}>
-          {passo === 1 ? 'Passo 1 de 2 — Dados de acesso' : 'Passo 2 de 2 — Informações pessoais'}
+          {passo === 1 ? 'Passo 1 de 3 — Dados de acesso' : passo === 2 ? 'Passo 2 de 3 — Informações pessoais' : 'Passo 3 de 3 — Selfie obrigatória'}
         </p>
 
-        <form onSubmit={passo === 1 ? (e) => { e.preventDefault(); if (!form.nome || !form.email || !form.telefone || !form.senha) { setErro('Preencha todos os campos obrigatórios!'); return; } if (form.senha !== form.confirmarSenha) { setErro('As senhas não coincidem!'); return; } setErro(''); setPasso(2) } : handleCadastro} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <form onSubmit={passo === 1 ? passarPasso1 : passo === 2 ? passarPasso2 : handleCadastro} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
+          {/* Passo 1 */}
           {passo === 1 && <>
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Nome completo *</label>
@@ -118,6 +159,7 @@ export default function Cadastro() {
             </div>
           </>}
 
+          {/* Passo 2 */}
           {passo === 2 && <>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
@@ -148,17 +190,70 @@ export default function Cadastro() {
               <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Bio (opcional)</label>
               <textarea className="input-field" placeholder="Fale um pouco sobre você..." value={form.bio} onChange={e => atualizar('bio', e.target.value)} rows={3} style={{ resize: 'none' }} />
             </div>
-            <div style={{ background: 'rgba(204,0,0,0.06)', borderRadius: 8, padding: '10px 12px' }}>
-              <p style={{ fontSize: 11, color: 'var(--text-secondary)' }}>✅ Confirmo que tenho mais de 13 anos e aceito os Termos de Uso e Política de Privacidade do Bazar Absoluto USA.</p>
+          </>}
+
+          {/* Passo 3 - Selfie */}
+          {passo === 3 && <>
+            <div style={{ background: 'rgba(0,31,91,0.06)', borderRadius: 10, padding: 14, marginBottom: 4 }}>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                📸 <strong>Por que precisamos da sua selfie?</strong><br />
+                Para garantir que você é uma pessoa real e manter a comunidade segura. Sua foto é analisada pelo admin e não é compartilhada publicamente.
+              </p>
+            </div>
+
+            <input ref={selfieRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => {
+              const f = e.target.files?.[0]
+              if (f) {
+                setSelfieFile(f)
+                const r = new FileReader(); r.onload = () => setSelfiePreview(r.result as string); r.readAsDataURL(f)
+              }
+            }} />
+            <input ref={cameraRef} type="file" accept="image/*" capture="user" style={{ display: 'none' }} onChange={e => {
+              const f = e.target.files?.[0]
+              if (f) {
+                setSelfieFile(f)
+                const r = new FileReader(); r.onload = () => setSelfiePreview(r.result as string); r.readAsDataURL(f)
+              }
+            }} />
+
+            {selfiePreview ? (
+              <div style={{ position: 'relative', textAlign: 'center' }}>
+                <img src={selfiePreview} alt="Selfie" style={{ width: 160, height: 160, borderRadius: '50%', objectFit: 'cover', border: '4px solid var(--red)' }} />
+                <button type="button" onClick={() => { setSelfiePreview(null); setSelfieFile(null) }} style={{ position: 'absolute', top: 0, right: '50%', transform: 'translateX(80px)', background: 'var(--red)', color: 'white', border: 'none', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', fontSize: 14 }}>✕</button>
+                <p style={{ fontSize: 12, color: '#2E7D32', fontWeight: 600, marginTop: 8 }}>✅ Selfie capturada!</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <button type="button" onClick={() => cameraRef.current?.click()} className="btn-primary" style={{ fontSize: 14 }}>
+                  📷 Tirar selfie com a câmera
+                </button>
+                <button type="button" onClick={() => selfieRef.current?.click()} className="btn-secondary" style={{ fontSize: 14 }}>
+                  🖼️ Escolher foto da galeria
+                </button>
+              </div>
+            )}
+
+            {/* Termos de uso */}
+            <div style={{ background: 'var(--bg-input)', borderRadius: 10, padding: 14 }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <input type="checkbox" checked={aceitouTermos} onChange={e => setAceitouTermos(e.target.checked)} style={{ marginTop: 2, width: 16, height: 16, flexShrink: 0, cursor: 'pointer' }} />
+                <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  Confirmo que tenho mais de 13 anos e aceito os{' '}
+                  <a href="/termos" target="_blank" style={{ color: 'var(--red)', fontWeight: 700 }}>Termos de Uso</a>
+                  {' '}e a{' '}
+                  <a href="/privacidade" target="_blank" style={{ color: 'var(--red)', fontWeight: 700 }}>Política de Privacidade</a>
+                  {' '}do Bazar Absoluto USA. Entendo que minha selfie será usada apenas para verificação de identidade.
+                </p>
+              </div>
             </div>
           </>}
 
           {erro && <p style={{ fontSize: 13, color: 'var(--red)', background: 'rgba(204,0,0,0.08)', padding: '8px 12px', borderRadius: 8 }}>{erro}</p>}
 
           <div style={{ display: 'flex', gap: 10 }}>
-            {passo === 2 && <button type="button" className="btn-secondary" onClick={() => setPasso(1)} style={{ width: 'auto', padding: '12px 20px' }}>Voltar</button>}
+            {passo > 1 && <button type="button" className="btn-secondary" onClick={() => { setPasso(p => p - 1); setErro('') }} style={{ width: 'auto', padding: '12px 20px' }}>← Voltar</button>}
             <button className="btn-primary" type="submit" disabled={carregando}>
-              {carregando ? 'Cadastrando...' : passo === 1 ? 'Continuar →' : '🎉 Criar conta!'}
+              {carregando ? '⏳ Cadastrando...' : passo < 3 ? 'Continuar →' : '🎉 Criar minha conta!'}
             </button>
           </div>
         </form>

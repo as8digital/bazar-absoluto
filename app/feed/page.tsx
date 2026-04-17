@@ -42,6 +42,73 @@ function ModalDenuncia({ postId, onClose }: { postId: string, onClose: () => voi
   )
 }
 
+function ComentarioItem({ comentario, postId, usuarioId }: { comentario: any, postId: string, usuarioId: string }) {
+  const [mostrarResposta, setMostrarResposta] = useState(false)
+  const [resposta, setResposta] = useState('')
+  const [respostas, setRespostas] = useState<any[]>([])
+
+  async function carregarRespostas() {
+    const { data } = await supabase.from('comentarios')
+      .select('*, profiles(nome, foto_url)')
+      .eq('post_id', postId)
+      .eq('resposta_para', comentario.id)
+      .order('criado_em', { ascending: true })
+    if (data) setRespostas(data)
+  }
+
+  async function enviarResposta() {
+    if (!resposta.trim() || !usuarioId) return
+    await supabase.from('comentarios').insert({
+      post_id: postId,
+      autor_id: usuarioId,
+      conteudo: resposta,
+      resposta_para: comentario.id
+    })
+    setResposta('')
+    carregarRespostas()
+  }
+
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <Avatar foto={comentario.profiles?.foto_url} nome={comentario.profiles?.nome || 'U'} size={32} />
+        <div style={{ flex: 1 }}>
+          <div style={{ background: 'var(--bg-input)', borderRadius: 12, padding: '8px 12px', marginBottom: 4 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>{comentario.profiles?.nome}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{comentario.conteudo}</div>
+          </div>
+          <button onClick={() => { setMostrarResposta(!mostrarResposta); if (!mostrarResposta) carregarRespostas() }} style={{ fontSize: 11, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Nunito', fontWeight: 700, padding: '0 4px' }}>
+            💬 Responder
+          </button>
+        </div>
+      </div>
+
+      {/* Respostas */}
+      {respostas.length > 0 && (
+        <div style={{ marginLeft: 40, marginTop: 8 }}>
+          {respostas.map(r => (
+            <div key={r.id} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+              <Avatar foto={r.profiles?.foto_url} nome={r.profiles?.nome || 'U'} size={26} />
+              <div style={{ flex: 1, background: 'var(--bg-input)', borderRadius: 10, padding: '6px 10px' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>{r.profiles?.nome}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{r.conteudo}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Campo de resposta */}
+      {mostrarResposta && (
+        <div style={{ marginLeft: 40, marginTop: 6, display: 'flex', gap: 6 }}>
+          <input value={resposta} onChange={e => setResposta(e.target.value)} onKeyDown={e => e.key === 'Enter' && enviarResposta()} placeholder={`Responder...`} style={{ flex: 1, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 16, padding: '6px 12px', fontSize: 12, color: 'var(--text-primary)', outline: 'none', fontFamily: 'Nunito' }} />
+          <button onClick={enviarResposta} style={{ background: 'var(--red)', color: 'white', border: 'none', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', fontSize: 12, flexShrink: 0 }}>→</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function PostCard({ post, usuarioId }: { post: any, usuarioId: string }) {
   const [curtido, setCurtido] = useState(false)
   const [curtidas, setCurtidas] = useState(post.curtidas || 0)
@@ -160,18 +227,14 @@ function PostCard({ post, usuarioId }: { post: any, usuarioId: string }) {
         {mostrarComentario && (
           <div style={{ padding: '8px 14px 14px', borderTop: '1px solid var(--border)' }}>
             {comentarios.map(c => (
-              <div key={c.id} style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-                <Avatar foto={c.profiles?.foto_url} nome={c.profiles?.nome || 'U'} size={32} />
-                <div style={{ flex: 1, background: 'var(--bg-input)', borderRadius: 12, padding: '8px 12px' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>{c.profiles?.nome}</div>
-                  <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{c.conteudo}</div>
-                </div>
-              </div>
+              <ComentarioItem key={c.id} comentario={c} postId={post.id} usuarioId={usuarioId} />
             ))}
             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              <div className="avatar" style={{ width: 32, height: 32, fontSize: 12, flexShrink: 0 }}>V</div>
-              <input value={comentario} onChange={e => setComentario(e.target.value)} onKeyDown={e => e.key === 'Enter' && enviarComentario()} placeholder="Escreva um comentário..." style={{ flex: 1, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 20, padding: '8px 14px', fontSize: 13, color: 'var(--text-primary)', outline: 'none', fontFamily: 'Nunito' }} />
-              <button onClick={enviarComentario} style={{ background: 'var(--red)', color: 'white', border: 'none', borderRadius: '50%', width: 34, height: 34, cursor: 'pointer', fontSize: 14, flexShrink: 0 }}>→</button>
+              <Avatar foto={undefined} nome="V" size={32} />
+              <div style={{ flex: 1, display: 'flex', gap: 6 }}>
+                <input value={comentario} onChange={e => setComentario(e.target.value)} onKeyDown={e => e.key === 'Enter' && enviarComentario()} placeholder="Escreva um comentário..." style={{ flex: 1, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 20, padding: '8px 14px', fontSize: 13, color: 'var(--text-primary)', outline: 'none', fontFamily: 'Nunito' }} />
+                <button onClick={enviarComentario} style={{ background: 'var(--red)', color: 'white', border: 'none', borderRadius: '50%', width: 34, height: 34, cursor: 'pointer', fontSize: 14, flexShrink: 0 }}>→</button>
+              </div>
             </div>
           </div>
         )}
@@ -297,8 +360,8 @@ function FeedContent() {
 
       {/* Banner/Capa do Bazar */}
       {capaBazar ? (
-        <div style={{ width: '100%', maxHeight: 200, overflow: 'hidden' }}>
-          <img src={capaBazar} alt="Bazar Absoluto" style={{ width: '100%', maxHeight: 200, objectFit: 'cover' }} />
+        <div style={{ width: '100%', height: 220, overflow: 'hidden' }}>
+          <img src={capaBazar} alt="Bazar Absoluto" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }} />
         </div>
       ) : (
         <div style={{ background: 'linear-gradient(135deg, var(--blue-dark) 0%, #003DA5 40%, var(--red) 100%)', padding: '20px 16px' }}>

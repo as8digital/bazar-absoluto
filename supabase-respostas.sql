@@ -1,0 +1,1 @@
+ALTER TABLE comentarios ADD COLUMN IF NOT EXISTS resposta_para UUID REFERENCES comentarios(id) ON DELETE CASCADE;
