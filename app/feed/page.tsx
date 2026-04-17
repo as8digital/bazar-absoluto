@@ -42,7 +42,7 @@ function ModalDenuncia({ postId, onClose }: { postId: string, onClose: () => voi
   )
 }
 
-function ComentarioItem({ comentario, postId, usuarioId }: { comentario: any, postId: string, usuarioId: string }) {
+function ComentarioItem({ comentario, postId, usuarioId, onNovaResposta }: { comentario: any, postId: string, usuarioId: string, onNovaResposta: () => void }) {
   const [mostrarResposta, setMostrarResposta] = useState(false)
   const [resposta, setResposta] = useState('')
   const [respostas, setRespostas] = useState<any[]>([])
@@ -58,14 +58,17 @@ function ComentarioItem({ comentario, postId, usuarioId }: { comentario: any, po
 
   async function enviarResposta() {
     if (!resposta.trim() || !usuarioId) return
-    await supabase.from('comentarios').insert({
+    const { error } = await supabase.from('comentarios').insert({
       post_id: postId,
       autor_id: usuarioId,
       conteudo: resposta,
       resposta_para: comentario.id
     })
-    setResposta('')
-    carregarRespostas()
+    if (!error) {
+      setResposta('')
+      carregarRespostas()
+      onNovaResposta() // incrementa contador no post pai
+    }
   }
 
   return (
@@ -230,7 +233,17 @@ function PostCard({ post, usuarioId }: { post: any, usuarioId: string }) {
         {mostrarComentario && (
           <div style={{ padding: '8px 14px 14px', borderTop: '1px solid var(--border)' }}>
             {comentarios.map(c => (
-              <ComentarioItem key={c.id} comentario={c} postId={post.id} usuarioId={usuarioId} />
+              <ComentarioItem 
+                key={c.id} 
+                comentario={c} 
+                postId={post.id} 
+                usuarioId={usuarioId}
+                onNovaResposta={async () => {
+                  const novoTotal = totalComentarios + 1
+                  await supabase.from('posts').update({ comentarios: novoTotal }).eq('id', post.id)
+                  setTotalComentarios(novoTotal)
+                }}
+              />
             ))}
             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
               <Avatar foto={undefined} nome="V" size={32} />
