@@ -108,9 +108,21 @@ function ModalComunicado({ usuarios, onClose }: { usuarios: any[], onClose: () =
         usuario_id: u.id, titulo, mensagem, tipo: 'comunicado', lida: false
       }))
       await supabase.from('notificacoes').insert(notifs)
+      // Enviar push para todos
+      await fetch('/api/notificar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ titulo, mensagem })
+      })
     } else {
       await supabase.from('notificacoes').insert({
         usuario_id: usuarioSelecionado, titulo, mensagem, tipo: 'comunicado', lida: false
+      })
+      // Enviar push para usuário específico
+      await fetch('/api/notificar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ titulo, mensagem, usuario_id: usuarioSelecionado })
       })
     }
     setEnviado(true)

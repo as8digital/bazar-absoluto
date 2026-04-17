@@ -1,0 +1,22 @@
+{
+  "name": "Bazar Absoluto USA",
+  "short_name": "Bazar Absoluto",
+  "description": "Comunidade brasileira nos EUA",
+  "start_url": "/feed",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#CC0000",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
