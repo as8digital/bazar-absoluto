@@ -10,8 +10,8 @@ export async function GET(request: NextRequest) {
       domains: 'bostonglobe.com,wbur.org,wcvb.com,bostonherald.com,masslive.com,cnn.com,reuters.com,apnews.com'
     },
     imigracao: {
-      q: 'immigration visa Massachusetts deportation asylum green card',
-      domains: 'reuters.com,apnews.com,nbcnews.com,cnn.com,bbc.com,bostonglobe.com,nytimes.com,washingtonpost.com'
+      q: 'ICE immigration "green card" "social security" visa deportation Massachusetts 2025',
+      domains: 'reuters.com,apnews.com,nbcnews.com,cnn.com,bbc.com,bostonglobe.com,nytimes.com,washingtonpost.com,univision.com'
     }
   }
 

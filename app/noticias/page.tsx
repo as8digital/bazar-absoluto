@@ -131,16 +131,25 @@ export default function Noticias() {
 
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '12px 12px 80px' }}>
         {mostrarForm && isAdmin && (
-          <div className="card" style={{ padding: 16, marginBottom: 16 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>📝 Publicar notícia</h3>
+          <div className="card" style={{ padding: 16, marginBottom: 16, border: '2px solid var(--gold)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <div style={{ width: 36, height: 36, background: 'var(--gold)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>📣</div>
+              <div>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Ronaldo Absoluto Informa</h3>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Publique uma notícia oficial da comunidade</p>
+              </div>
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <input className="input-field" placeholder="Título *" value={novaNoticia.titulo} onChange={e => setNovaNoticia(n => ({ ...n, titulo: e.target.value }))} />
-              <textarea className="input-field" placeholder="Texto *" value={novaNoticia.descricao} onChange={e => setNovaNoticia(n => ({ ...n, descricao: e.target.value }))} rows={3} style={{ resize: 'none' }} />
-              <input className="input-field" placeholder="Link (opcional)" value={novaNoticia.url} onChange={e => setNovaNoticia(n => ({ ...n, url: e.target.value }))} />
+              <input className="input-field" placeholder="Título da notícia *" value={novaNoticia.titulo} onChange={e => setNovaNoticia(n => ({ ...n, titulo: e.target.value }))} />
+              <textarea className="input-field" placeholder="Escreva a notícia aqui... *" value={novaNoticia.descricao} onChange={e => setNovaNoticia(n => ({ ...n, descricao: e.target.value }))} rows={4} style={{ resize: 'none' }} />
+              <input className="input-field" placeholder="Link de referência (opcional)" value={novaNoticia.url} onChange={e => setNovaNoticia(n => ({ ...n, url: e.target.value }))} />
               <input className="input-field" placeholder="Link da imagem (opcional)" value={novaNoticia.imagem} onChange={e => setNovaNoticia(n => ({ ...n, imagem: e.target.value }))} />
+              <div style={{ background: 'rgba(255,215,0,0.1)', borderRadius: 8, padding: '8px 12px' }}>
+                <p style={{ fontSize: 11, color: 'var(--gold-dark)' }}>⭐ Esta notícia aparecerá no feed com destaque como publicação oficial do Bazar Absoluto USA</p>
+              </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button className="btn-secondary" style={{ fontSize: 13 }} onClick={() => setMostrarForm(false)}>Cancelar</button>
-                <button className="btn-primary" style={{ fontSize: 13 }} onClick={publicarManual} disabled={publicando}>{publicando ? '⏳' : '📤 Publicar'}</button>
+                <button className="btn-primary" style={{ fontSize: 13 }} onClick={publicarManual} disabled={publicando}>{publicando ? '⏳' : '📤 Publicar agora'}</button>
               </div>
             </div>
           </div>

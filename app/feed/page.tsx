@@ -360,8 +360,8 @@ function FeedContent() {
 
       {/* Banner/Capa do Bazar */}
       {capaBazar ? (
-        <div style={{ width: '100%', height: 220, overflow: 'hidden' }}>
-          <img src={capaBazar} alt="Bazar Absoluto" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }} />
+        <div style={{ width: '100%', maxHeight: 280, overflow: 'hidden', background: 'var(--blue-dark)' }}>
+          <img src={capaBazar} alt="Bazar Absoluto" style={{ width: '100%', height: 280, objectFit: 'contain', objectPosition: 'center', background: 'var(--blue-dark)' }} />
         </div>
       ) : (
         <div style={{ background: 'linear-gradient(135deg, var(--blue-dark) 0%, #003DA5 40%, var(--red) 100%)', padding: '20px 16px' }}>
