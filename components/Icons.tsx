@@ -7,6 +7,7 @@ import React from 'react'
 type IconProps = {
   size?: number
   stroke?: number
+  color?: string
   className?: string
   style?: React.CSSProperties
 }
@@ -15,6 +16,7 @@ const Svg = ({
   children,
   size = 22,
   stroke = 1.8,
+  color,
   fill = 'none',
   className,
   style,
@@ -24,12 +26,12 @@ const Svg = ({
     height={size}
     viewBox="0 0 24 24"
     fill={fill}
-    stroke="currentColor"
+    stroke={color || 'currentColor'}
     strokeWidth={stroke}
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
-    style={{ display: 'block', flexShrink: 0, ...style }}
+    style={{ display: 'block', flexShrink: 0, color, ...style }}
   >
     {children}
   </svg>
