@@ -27,7 +27,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           OneSignalDeferred.push(async function(OneSignal) {
             await OneSignal.init({
               appId: "cb2509bf-d38a-4037-af4a-9098cdde0b80",
-              notifyButton: { enable: false },
+              safari_web_id: "web.onesignal.auto.3b9e77c1-5852-4edd-a278-c29c156a72b0",
+              notifyButton: {
+                enable: true,
+              },
               promptOptions: {
                 slidedown: {
                   prompts: [{
@@ -38,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                       acceptButton: "Ativar",
                       cancelButton: "Agora não",
                     },
-                    delay: { timeDelay: 10 }
+                    delay: { timeDelay: 5 }
                   }]
                 }
               }
