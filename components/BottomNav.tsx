@@ -1,15 +1,18 @@
 'use client'
+import React from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import {
   IconHome, IconHomeFill,
   IconBriefcase, IconNews, IconUser, IconPlus,
 } from './Icons'
 
+type IconComp = (p: { size?: number; stroke?: number }) => React.ReactElement
+
 type NavItem = {
   label: string
   rota: string
-  Icon?: (p: { size?: number; stroke?: number }) => JSX.Element
-  IconActive?: (p: { size?: number; stroke?: number }) => JSX.Element
+  Icon?: IconComp
+  IconActive?: IconComp
   isPostar?: boolean
 }
 
@@ -47,7 +50,7 @@ export default function BottomNav() {
         }
 
         const ativo = pathname === item.rota
-        const IconToUse = (ativo && item.IconActive ? item.IconActive : item.Icon) as NonNullable<NavItem['Icon']>
+        const IconToUse: IconComp = (ativo && item.IconActive ? item.IconActive : item.Icon) as IconComp
 
         return (
           <div
