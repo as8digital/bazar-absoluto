@@ -142,3 +142,18 @@ export const IconClock = (p: IconProps) => (
 export const IconBuilding = (p: IconProps) => (
   <Svg {...p}><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 8h.01M15 8h.01M9 12h.01M15 12h.01M9 16h.01M15 16h.01"/></Svg>
 )
+export const IconCheck = (p: IconProps) => (
+  <Svg {...p}><path d="M4 12l5 5L20 6"/></Svg>
+)
+export const IconChevron = (p: IconProps) => (
+  <Svg {...p}><path d="M9 6l6 6-6 6"/></Svg>
+)
+export const IconArrowRight = (p: IconProps) => (
+  <Svg {...p}><path d="M5 12h14M13 6l6 6-6 6"/></Svg>
+)
+export const IconMenu = (p: IconProps) => (
+  <Svg {...p}><path d="M4 7h16M4 12h16M4 17h16"/></Svg>
+)
+export const IconMore = (p: IconProps) => (
+  <Svg {...p}><circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/></Svg>
+)
