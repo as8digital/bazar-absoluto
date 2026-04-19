@@ -72,7 +72,20 @@ export default function TopBar() {
         <button onClick={alternarTema} style={{ width: 36, height: 36, borderRadius: '50%', border: '1.5px solid var(--border)', background: 'var(--bg-input)', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {tema === 'light' ? '🌙' : '☀️'}
         </button>
-        <button onClick={() => router.push('/notificacoes')} style={{ width: 36, height: 36, borderRadius: '50%', border: '1.5px solid var(--border)', background: 'var(--bg-input)', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        <button onClick={async () => {
+          // Tenta ativar notificações pelo OneSignal
+          if (typeof window !== 'undefined' && (window as any).OneSignal) {
+            const OneSignal = (window as any).OneSignal
+            const isSubscribed = await OneSignal.User?.PushSubscription?.optedIn
+            if (!isSubscribed) {
+              await OneSignal.Slidedown?.promptPush()
+            } else {
+              router.push('/notificacoes')
+            }
+          } else {
+            router.push('/notificacoes')
+          }
+        }} style={{ width: 36, height: 36, borderRadius: '50%', border: '1.5px solid var(--border)', background: 'var(--bg-input)', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
           🔔
           {totalNotif > 0 && (
             <div style={{ position: 'absolute', top: -2, right: -2, width: 18, height: 18, background: 'var(--red)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: 'white' }}>

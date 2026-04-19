@@ -29,22 +29,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               appId: "cb2509bf-d38a-4037-af4a-9098cdde0b80",
               safari_web_id: "web.onesignal.auto.3b9e77c1-5852-4edd-a278-c29c156a72b0",
               notifyButton: {
-                enable: true,
+                enable: false,
               },
-              promptOptions: {
-                slidedown: {
-                  prompts: [{
-                    type: "push",
-                    autoPrompt: true,
-                    text: {
-                      actionMessage: "Ative notificações do Bazar Absoluto USA!",
-                      acceptButton: "Ativar",
-                      cancelButton: "Agora não",
-                    },
-                    delay: { timeDelay: 5 }
-                  }]
-                }
-              }
             });
           });
         `}</Script>
