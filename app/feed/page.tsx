@@ -4,7 +4,13 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import TopBar from '@/components/TopBar'
 import BottomNav from '@/components/BottomNav'
+import MembersOnlineRow from '@/components/MembersOnlineRow'
 import { supabase } from '@/lib/supabase'
+import {
+  IconHeart, IconHeartFill, IconComment, IconShare,
+  IconMoreV, IconPin, IconStar, IconSend, IconCamera,
+  IconFlag, IconLink, IconClose, IconLock, IconCheck,
+} from '@/components/Icons'
 
 function Avatar({ foto, nome, size = 44 }: { foto?: string, nome: string, size?: number }) {
   const iniciais = nome?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'U'
@@ -25,18 +31,32 @@ function ModalDenuncia({ postId, onClose }: { postId: string, onClose: () => voi
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div className="card" style={{ width: '100%', maxWidth: 360, padding: 20 }}>
-        {enviado ? <div style={{ textAlign: 'center', padding: 20 }}><div style={{ fontSize: 48 }}>✅</div><p style={{ fontWeight: 700, marginTop: 8 }}>Denúncia enviada!</p></div> : <>
-          <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>🚨 Denunciar post</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {['Conteúdo ofensivo', 'Spam', 'Informação falsa', 'Assédio', 'Conteúdo inapropriado', 'Outro'].map(m => (
-              <button key={m} onClick={() => setMotivo(m)} style={{ padding: '10px', borderRadius: 8, border: `2px solid ${motivo === m ? 'var(--red)' : 'var(--border)'}`, background: motivo === m ? 'rgba(204,0,0,0.08)' : 'var(--bg-input)', color: motivo === m ? 'var(--red)' : 'var(--text-secondary)', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left', fontFamily: 'Nunito' }}>{motivo === m ? '✓ ' : ''}{m}</button>
-            ))}
+        {enviado ? (
+          <div style={{ textAlign: 'center', padding: 20 }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'oklch(0.62 0.17 150 / 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', color: 'oklch(0.5 0.17 150)' }}>
+              <IconCheck size={30} stroke={2.5} />
+            </div>
+            <p style={{ fontWeight: 700, marginTop: 12 }}>Denúncia enviada!</p>
           </div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-            <button onClick={onClose} className="btn-secondary" style={{ fontSize: 13 }}>Cancelar</button>
-            <button onClick={enviar} disabled={!motivo} className="btn-primary" style={{ fontSize: 13, opacity: !motivo ? 0.5 : 1 }}>Enviar</button>
-          </div>
-        </>}
+        ) : (
+          <>
+            <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <IconFlag size={18} color="var(--red)" /> Denunciar post
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {['Conteúdo ofensivo', 'Spam', 'Informação falsa', 'Assédio', 'Conteúdo inapropriado', 'Outro'].map(m => (
+                <button key={m} onClick={() => setMotivo(m)} style={{ padding: '10px', borderRadius: 10, border: `1.5px solid ${motivo === m ? 'var(--red)' : 'var(--border)'}`, background: motivo === m ? 'var(--red-soft)' : 'var(--bg-input)', color: motivo === m ? 'var(--red-dark)' : 'var(--text-secondary)', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left', fontFamily: 'Nunito', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {motivo === m && <IconCheck size={14} stroke={2.4} />}
+                  {m}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+              <button onClick={onClose} className="btn-secondary" style={{ fontSize: 13 }}>Cancelar</button>
+              <button onClick={enviar} disabled={!motivo} className="btn-primary" style={{ fontSize: 13, opacity: !motivo ? 0.5 : 1 }}>Enviar</button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
@@ -67,7 +87,7 @@ function ComentarioItem({ comentario, postId, usuarioId, onNovaResposta }: { com
     if (!error) {
       setResposta('')
       carregarRespostas()
-      onNovaResposta() // incrementa contador no post pai
+      onNovaResposta()
     }
   }
 
@@ -76,23 +96,22 @@ function ComentarioItem({ comentario, postId, usuarioId, onNovaResposta }: { com
       <div style={{ display: 'flex', gap: 8 }}>
         <Avatar foto={comentario.profiles?.foto_url} nome={comentario.profiles?.nome || 'U'} size={32} />
         <div style={{ flex: 1 }}>
-          <div style={{ background: 'var(--bg-input)', borderRadius: 12, padding: '8px 12px', marginBottom: 4 }}>
+          <div style={{ background: 'var(--bg-input)', borderRadius: 14, padding: '8px 12px', marginBottom: 4 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>{comentario.profiles?.nome}</div>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{comentario.conteudo}</div>
           </div>
-          <button onClick={() => { setMostrarResposta(!mostrarResposta); if (!mostrarResposta) carregarRespostas() }} style={{ fontSize: 11, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Nunito', fontWeight: 700, padding: '0 4px' }}>
-            💬 Responder
+          <button onClick={() => { setMostrarResposta(!mostrarResposta); if (!mostrarResposta) carregarRespostas() }} style={{ fontSize: 11, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Nunito', fontWeight: 700, padding: '0 4px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <IconComment size={12} /> Responder
           </button>
         </div>
       </div>
 
-      {/* Respostas */}
       {respostas.length > 0 && (
         <div style={{ marginLeft: 40, marginTop: 8 }}>
           {respostas.map(r => (
             <div key={r.id} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
               <Avatar foto={r.profiles?.foto_url} nome={r.profiles?.nome || 'U'} size={26} />
-              <div style={{ flex: 1, background: 'var(--bg-input)', borderRadius: 10, padding: '6px 10px' }}>
+              <div style={{ flex: 1, background: 'var(--bg-input)', borderRadius: 12, padding: '6px 10px' }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>{r.profiles?.nome}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{r.conteudo}</div>
               </div>
@@ -101,11 +120,12 @@ function ComentarioItem({ comentario, postId, usuarioId, onNovaResposta }: { com
         </div>
       )}
 
-      {/* Campo de resposta */}
       {mostrarResposta && (
         <div style={{ marginLeft: 40, marginTop: 6, display: 'flex', gap: 6 }}>
-          <input value={resposta} onChange={e => setResposta(e.target.value)} onKeyDown={e => e.key === 'Enter' && enviarResposta()} placeholder={`Responder...`} style={{ flex: 1, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 16, padding: '6px 12px', fontSize: 12, color: 'var(--text-primary)', outline: 'none', fontFamily: 'Nunito' }} />
-          <button onClick={enviarResposta} style={{ background: 'var(--red)', color: 'white', border: 'none', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', fontSize: 12, flexShrink: 0 }}>→</button>
+          <input value={resposta} onChange={e => setResposta(e.target.value)} onKeyDown={e => e.key === 'Enter' && enviarResposta()} placeholder="Responder..." style={{ flex: 1, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 16, padding: '6px 12px', fontSize: 12, color: 'var(--text-primary)', outline: 'none', fontFamily: 'Nunito' }} />
+          <button onClick={enviarResposta} style={{ background: 'var(--red)', color: 'white', border: 'none', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <IconSend size={12} />
+          </button>
         </div>
       )}
     </div>
@@ -178,65 +198,87 @@ function PostCard({ post, usuarioId }: { post: any, usuarioId: string }) {
   return (
     <>
       {mostrarDenuncia && <ModalDenuncia postId={post.id} onClose={() => setMostrarDenuncia(false)} />}
-      <div className="card" style={{ overflow: 'hidden', marginBottom: 12 }}>
-        {post.patrocinado && <div className="sponsor-bar">⭐ ANÚNCIO PATROCINADO</div>}
-        <div style={{ padding: '12px 14px 10px', display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div className="card fade-in" style={{ overflow: 'hidden', marginBottom: 12 }}>
+        {post.patrocinado && (
+          <div className="sponsor-bar" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <IconStar size={11} stroke={2.4} /> Anúncio patrocinado
+          </div>
+        )}
+        <div style={{ padding: '14px 16px 10px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Avatar foto={post.autor_foto} nome={post.autor_nome} size={44} />
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{post.autor_nome}</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: -0.1 }}>{post.autor_nome}</span>
               {post.autor_role === 'admin' && <span className="badge-admin">ADMIN</span>}
               {post.autor_role === 'moderador' && <span className="badge-gold">MOD</span>}
             </div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>📍 {post.autor_cidade}, {post.autor_estado} · {tempo()}</div>
+            <div style={{ fontSize: 11.5, color: 'var(--text-muted)', fontWeight: 600, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <IconPin size={11} stroke={2} />
+              {post.autor_cidade}, {post.autor_estado}
+              <span style={{ opacity: 0.5 }}>·</span>
+              <span>{tempo()}</span>
+            </div>
           </div>
           <div style={{ position: 'relative' }}>
-            <button onClick={() => setMostrarMenu(!mostrarMenu)} style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 20, color: 'var(--text-muted)' }}>⋯</button>
+            <button onClick={() => setMostrarMenu(!mostrarMenu)} style={{ width: 32, height: 32, borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <IconMoreV size={18} />
+            </button>
             {mostrarMenu && (
-              <div style={{ position: 'absolute', right: 0, top: 36, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 8, zIndex: 100, minWidth: 160, boxShadow: '0 4px 16px rgba(0,0,0,0.15)' }}>
-                <button onClick={() => { setMostrarDenuncia(true); setMostrarMenu(false) }} style={{ width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', color: 'var(--red)', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left', fontFamily: 'Nunito' }}>🚨 Denunciar</button>
-                <button onClick={() => setMostrarMenu(false)} style={{ width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left', fontFamily: 'Nunito' }}>🔗 Copiar link</button>
+              <div style={{ position: 'absolute', right: 0, top: 36, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 6, zIndex: 100, minWidth: 170, boxShadow: 'var(--shadow-soft)' }}>
+                <button onClick={() => { setMostrarDenuncia(true); setMostrarMenu(false) }} style={{ width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', color: 'var(--red)', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left', fontFamily: 'Nunito', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <IconFlag size={14} /> Denunciar
+                </button>
+                <button onClick={() => setMostrarMenu(false)} style={{ width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left', fontFamily: 'Nunito', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <IconLink size={14} /> Copiar link
+                </button>
               </div>
             )}
           </div>
         </div>
-        {post.conteudo && <div style={{ padding: '0 14px 12px', fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.6 }}>{post.conteudo}</div>}
+        {post.conteudo && <div style={{ padding: '0 16px 14px', fontSize: 14.5, color: 'var(--text-primary)', lineHeight: 1.55 }}>{post.conteudo}</div>}
         {post.imagem_url && !post.link_url && <img src={post.imagem_url} alt="Post" style={{ width: '100%', maxHeight: 500, objectFit: 'cover', display: 'block' }} />}
         {post.video_url && (
           <video controls preload="metadata" style={{ width: '100%', maxHeight: 400, background: '#000', display: 'block' }} onLoadedMetadata={e => { const v = e.currentTarget; v.currentTime = 1 }}>
             <source src={post.video_url} />
           </video>
         )}
-        {/* Card de notícia com link */}
         {post.link_url && (
-          <a href={post.link_url} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', display: 'block', margin: '0 14px 12px', border: '1.5px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+          <a href={post.link_url} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', display: 'block', margin: '0 16px 14px', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
             {post.imagem_url && <img src={post.imagem_url} alt="Notícia" style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }} onError={e => (e.currentTarget.style.display = 'none')} />}
-            <div style={{ padding: '10px 12px', background: 'var(--bg-input)' }}>
-              {post.link_fonte && <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase' }}>{post.link_fonte}</div>}
+            <div style={{ padding: '12px 14px', background: 'var(--bg-input)' }}>
+              {post.link_fonte && <div style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 700, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 1 }}>{post.link_fonte}</div>}
               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.4, marginBottom: 6 }}>{post.link_titulo || post.conteudo?.split('\n')[0]}</div>
               <div style={{ fontSize: 12, color: 'var(--red)', fontWeight: 700 }}>Ler matéria completa →</div>
             </div>
           </a>
         )}
-        <div style={{ padding: '6px 14px', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--text-muted)' }}>
-            <div style={{ width: 20, height: 20, background: 'var(--red)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'white' }}>♥</div>
-            {curtidas}
+        <div style={{ padding: '8px 16px', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--text-muted)', fontWeight: 600 }}>
+            <div style={{ width: 20, height: 20, background: 'var(--red)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+              <IconHeartFill size={11} />
+            </div>
+            {curtidas} curtidas
           </div>
-          <button onClick={abrirComentarios} style={{ fontSize: 13, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Nunito' }}>{totalComentarios} comentários</button>
+          <button onClick={abrirComentarios} style={{ fontSize: 12.5, color: 'var(--text-muted)', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Nunito' }}>{totalComentarios} comentários</button>
         </div>
         <div style={{ padding: '4px 8px', display: 'flex' }}>
-          <button className={`post-action-btn ${curtido ? 'liked' : ''}`} onClick={curtir}>{curtido ? '♥' : '♡'} Curtir</button>
-          <button className="post-action-btn" onClick={abrirComentarios}>💬 Comentar</button>
-          <button className="post-action-btn">↗ Compartilhar</button>
+          <button className={`post-action-btn ${curtido ? 'liked' : ''}`} onClick={curtir}>
+            {curtido ? <IconHeartFill size={18} /> : <IconHeart size={18} />} Curtir
+          </button>
+          <button className="post-action-btn" onClick={abrirComentarios}>
+            <IconComment size={18} /> Comentar
+          </button>
+          <button className="post-action-btn">
+            <IconShare size={18} /> Compartilhar
+          </button>
         </div>
         {mostrarComentario && (
-          <div style={{ padding: '8px 14px 14px', borderTop: '1px solid var(--border)' }}>
+          <div style={{ padding: '10px 16px 14px', borderTop: '1px solid var(--border)' }}>
             {comentarios.map(c => (
-              <ComentarioItem 
-                key={c.id} 
-                comentario={c} 
-                postId={post.id} 
+              <ComentarioItem
+                key={c.id}
+                comentario={c}
+                postId={post.id}
                 usuarioId={usuarioId}
                 onNovaResposta={async () => {
                   const novoTotal = totalComentarios + 1
@@ -245,11 +287,13 @@ function PostCard({ post, usuarioId }: { post: any, usuarioId: string }) {
                 }}
               />
             ))}
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
               <Avatar foto={undefined} nome="V" size={32} />
               <div style={{ flex: 1, display: 'flex', gap: 6 }}>
                 <input value={comentario} onChange={e => setComentario(e.target.value)} onKeyDown={e => e.key === 'Enter' && enviarComentario()} placeholder="Escreva um comentário..." style={{ flex: 1, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 20, padding: '8px 14px', fontSize: 13, color: 'var(--text-primary)', outline: 'none', fontFamily: 'Nunito' }} />
-                <button onClick={enviarComentario} style={{ background: 'var(--red)', color: 'white', border: 'none', borderRadius: '50%', width: 34, height: 34, cursor: 'pointer', fontSize: 14, flexShrink: 0 }}>→</button>
+                <button onClick={enviarComentario} style={{ background: 'var(--red)', color: 'white', border: 'none', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <IconSend size={16} />
+                </button>
               </div>
             </div>
           </div>
@@ -361,7 +405,7 @@ function FeedContent() {
       if (!error) {
         setNovoPost(''); setMediaPreview(null); setMediaFile(null)
         if (isAdmin) await carregarPosts()
-        else alert('✅ Post enviado para moderação!')
+        else alert('Post enviado para moderação!')
       }
     } catch { alert('Erro ao publicar. Tente novamente.') }
     setPublicando(false)
@@ -374,41 +418,43 @@ function FeedContent() {
       <TopBar />
 
       {mostrarBemVindo && (
-        <div style={{ background: 'linear-gradient(135deg, var(--blue-dark), var(--red))', padding: 16, textAlign: 'center', color: 'white' }}>
-          <div style={{ fontSize: 28, marginBottom: 4 }}>🎉</div>
-          <p style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>Bem-vindo ao Bazar Absoluto USA!</p>
-          <p style={{ fontSize: 13, opacity: 0.9 }}>Você faz parte da nossa comunidade!</p>
-          <button onClick={() => setMostrarBemVindo(false)} style={{ marginTop: 10, background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)', color: 'white', padding: '6px 16px', borderRadius: 20, cursor: 'pointer', fontSize: 12, fontFamily: 'Nunito' }}>Fechar ✕</button>
+        <div style={{ background: 'linear-gradient(135deg, var(--navy), var(--red))', padding: 18, textAlign: 'center', color: 'white', position: 'relative' }}>
+          <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, fontFamily: 'Poppins' }}>Bem-vindo ao Bazar Absoluto USA</p>
+          <p style={{ fontSize: 13, opacity: 0.9 }}>Você faz parte da nossa comunidade</p>
+          <button onClick={() => setMostrarBemVindo(false)} style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', width: 28, height: 28, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <IconClose size={14} />
+          </button>
         </div>
       )}
 
-      {/* Banner/Capa do Bazar */}
+      {/* Capa */}
       {capaBazar ? (
-        <div style={{ width: '100%', maxHeight: 280, overflow: 'hidden', background: 'var(--blue-dark)' }}>
-          <img src={capaBazar} alt="Bazar Absoluto" style={{ width: '100%', height: 280, objectFit: 'contain', objectPosition: 'center', background: 'var(--blue-dark)' }} />
+        <div style={{ width: '100%', maxHeight: 280, overflow: 'hidden', background: 'var(--navy)' }}>
+          <img src={capaBazar} alt="Bazar Absoluto" style={{ width: '100%', height: 280, objectFit: 'contain', objectPosition: 'center', background: 'var(--navy)' }} />
         </div>
       ) : (
-        <div style={{ background: 'linear-gradient(135deg, var(--blue-dark) 0%, #003DA5 40%, var(--red) 100%)', padding: '20px 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-            <div style={{ width: 56, height: 56, background: 'var(--red)', borderRadius: 16, border: '3px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, fontWeight: 700, color: 'white', fontFamily: 'Poppins', flexShrink: 0 }}>B</div>
+        <div style={{ background: 'linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 45%, var(--red) 100%)', padding: '22px 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+            <div style={{ width: 60, height: 60, background: 'var(--red)', borderRadius: 18, border: '3px solid rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: 'white', fontFamily: 'Poppins', flexShrink: 0, letterSpacing: -1 }}>B</div>
             <div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: 'white', fontFamily: 'Poppins' }}>Bazar Absoluto USA</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>🔒 Grupo privado · Massachusetts, EUA</div>
+              <div style={{ fontSize: 19, fontWeight: 700, color: 'white', fontFamily: 'Poppins', letterSpacing: -0.3 }}>Bazar Absoluto USA</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
+                <IconLock size={11} stroke={2} /> Grupo privado · Massachusetts, EUA
+              </div>
             </div>
           </div>
-          {/* Fotos dos membros */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ display: 'flex' }}>
               {membros.slice(0, 8).map((m, i) => (
                 <div key={m.id} style={{ marginLeft: i === 0 ? 0 : -8, zIndex: 10 - i }}>
                   {m.foto_url
-                    ? <img src={m.foto_url} alt={m.nome} style={{ width: 30, height: 30, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.8)', objectFit: 'cover' }} />
-                    : <div style={{ width: 30, height: 30, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.8)', background: 'var(--red)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'white' }}>{m.nome?.[0] || 'U'}</div>
+                    ? <img src={m.foto_url} alt={m.nome} style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.9)', objectFit: 'cover' }} />
+                    : <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.9)', background: 'var(--red)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'white' }}>{m.nome?.[0] || 'U'}</div>
                   }
                 </div>
               ))}
             </div>
-            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', marginLeft: 4 }}>{membros.length} membros</span>
+            <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.85)', marginLeft: 4, fontWeight: 600 }}>{membros.length} membros</span>
           </div>
         </div>
       )}
@@ -421,13 +467,15 @@ function FeedContent() {
           { label: 'Serviços', rota: '/servicos' },
           { label: 'Notícias', rota: '/noticias' },
         ].map(a => (
-          <button key={a.rota} onClick={() => router.push(a.rota)} style={{ flex: 1, padding: '11px 4px', fontSize: 13, fontWeight: 700, color: a.rota === '/feed' ? 'var(--red)' : 'var(--text-muted)', background: 'transparent', border: 'none', borderBottom: a.rota === '/feed' ? '3px solid var(--red)' : '3px solid transparent', cursor: 'pointer', fontFamily: 'Nunito' }}>
+          <button key={a.rota} onClick={() => router.push(a.rota)} style={{ flex: 1, padding: '12px 4px', fontSize: 13, fontWeight: 700, color: a.rota === '/feed' ? 'var(--red)' : 'var(--text-muted)', background: 'transparent', border: 'none', borderBottom: a.rota === '/feed' ? '2.5px solid var(--red)' : '2.5px solid transparent', cursor: 'pointer', fontFamily: 'Nunito', letterSpacing: -0.1 }}>
             {a.label}
           </button>
         ))}
       </div>
 
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '12px 12px 80px' }}>
+        <MembersOnlineRow />
+
         {/* Criar post */}
         <div className="card" style={{ padding: 14, marginBottom: 12 }}>
           <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
@@ -437,10 +485,12 @@ function FeedContent() {
           {mediaPreview && (
             <div style={{ position: 'relative', marginBottom: 10 }}>
               {mediaType === 'video'
-                ? <video src={mediaPreview} controls style={{ width: '100%', maxHeight: 200, borderRadius: 10 }} />
-                : <img src={mediaPreview} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 10 }} />
+                ? <video src={mediaPreview} controls style={{ width: '100%', maxHeight: 200, borderRadius: 12 }} />
+                : <img src={mediaPreview} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 12 }} />
               }
-              <button onClick={() => { setMediaPreview(null); setMediaFile(null) }} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', fontSize: 14 }}>✕</button>
+              <button onClick={() => { setMediaPreview(null); setMediaFile(null) }} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', borderRadius: '50%', width: 30, height: 30, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <IconClose size={14} />
+              </button>
             </div>
           )}
           <div className="divider" style={{ marginBottom: 10 }} />
@@ -453,20 +503,21 @@ function FeedContent() {
             }
           }} />
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => fileRef.current?.click()} style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-input)', fontSize: 13, fontWeight: 700, color: '#1877F2', cursor: 'pointer', fontFamily: 'Nunito' }}>📷 Foto/Vídeo</button>
-            <button onClick={publicarPost} disabled={publicando || (!novoPost.trim() && !mediaFile)} className="btn-primary" style={{ flex: 1, padding: '8px', fontSize: 13, opacity: (!novoPost.trim() && !mediaFile) ? 0.5 : 1 }}>
-              {publicando ? '⏳ Enviando...' : isAdmin ? '📤 Publicar' : '📤 Enviar'}
+            <button onClick={() => fileRef.current?.click()} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-input)', fontSize: 13, fontWeight: 700, color: 'var(--navy-mid)', cursor: 'pointer', fontFamily: 'Nunito', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <IconCamera size={16} /> Foto / Vídeo
+            </button>
+            <button onClick={publicarPost} disabled={publicando || (!novoPost.trim() && !mediaFile)} className="btn-primary" style={{ flex: 1, padding: '10px', fontSize: 13, opacity: (!novoPost.trim() && !mediaFile) ? 0.5 : 1 }}>
+              {publicando ? 'Enviando...' : isAdmin ? 'Publicar' : 'Enviar'}
             </button>
           </div>
-          {!isAdmin && <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, textAlign: 'center' }}>⚠️ Posts passam por moderação antes de aparecer</p>}
+          {!isAdmin && <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8, textAlign: 'center' }}>Posts passam por moderação antes de aparecer</p>}
         </div>
 
         {/* Posts */}
         {posts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text-muted)' }}>
-            <div style={{ fontSize: 56, marginBottom: 16 }}>📰</div>
-            <p style={{ fontSize: 16, fontWeight: 700 }}>Nenhum post ainda!</p>
-            <p style={{ fontSize: 14, marginTop: 8 }}>Seja o primeiro a postar algo!</p>
+            <p style={{ fontSize: 16, fontWeight: 700 }}>Nenhum post ainda</p>
+            <p style={{ fontSize: 14, marginTop: 8 }}>Seja o primeiro a postar algo</p>
           </div>
         ) : posts.map(post => <PostCard key={post.id} post={post} usuarioId={usuario?.id || ''} />)}
       </div>
