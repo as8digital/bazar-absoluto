@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import TopBar from '@/components/TopBar'
 import BottomNav from '@/components/BottomNav'
 import MembersOnlineRow from '@/components/MembersOnlineRow'
+import SidebarLeft from '@/components/SidebarLeft'
+import SidebarRight from '@/components/SidebarRight'
 import { supabase } from '@/lib/supabase'
 import {
   IconHeart, IconHeartFill, IconComment, IconShare,
@@ -418,7 +420,7 @@ function FeedContent() {
       <TopBar />
 
       {mostrarBemVindo && (
-        <div style={{ background: 'linear-gradient(135deg, var(--navy), var(--red))', padding: 18, textAlign: 'center', color: 'white', position: 'relative' }}>
+        <div className="mobile-only" style={{ background: 'linear-gradient(135deg, var(--navy), var(--red))', padding: 18, textAlign: 'center', color: 'white', position: 'relative' }}>
           <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, fontFamily: 'Poppins' }}>Bem-vindo ao Bazar Absoluto USA</p>
           <p style={{ fontSize: 13, opacity: 0.9 }}>Você faz parte da nossa comunidade</p>
           <button onClick={() => setMostrarBemVindo(false)} style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', width: 28, height: 28, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -427,13 +429,13 @@ function FeedContent() {
         </div>
       )}
 
-      {/* Capa */}
+      {/* Capa (só mobile — no desktop o grid assume o espaço) */}
       {capaBazar ? (
-        <div style={{ width: '100%', maxHeight: 280, overflow: 'hidden', background: 'var(--navy)' }}>
+        <div className="mobile-only" style={{ width: '100%', maxHeight: 280, overflow: 'hidden', background: 'var(--navy)' }}>
           <img src={capaBazar} alt="Bazar Absoluto" style={{ width: '100%', height: 280, objectFit: 'contain', objectPosition: 'center', background: 'var(--navy)' }} />
         </div>
       ) : (
-        <div style={{ background: 'linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 45%, var(--red) 100%)', padding: '22px 16px' }}>
+        <div className="mobile-only" style={{ background: 'linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 45%, var(--red) 100%)', padding: '22px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
             <div style={{ width: 60, height: 60, background: 'var(--red)', borderRadius: 18, border: '3px solid rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: 'white', fontFamily: 'Poppins', flexShrink: 0, letterSpacing: -1 }}>B</div>
             <div>
@@ -459,8 +461,8 @@ function FeedContent() {
         </div>
       )}
 
-      {/* Abas */}
-      <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', display: 'flex', position: 'sticky', top: 56, zIndex: 99 }}>
+      {/* Abas (só mobile) */}
+      <div className="mobile-only" style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', display: 'flex', position: 'sticky', top: 56, zIndex: 99 }}>
         {[
           { label: 'Feed', rota: '/feed' },
           { label: 'Empregos', rota: '/empregos' },
@@ -473,7 +475,10 @@ function FeedContent() {
         ))}
       </div>
 
-      <div style={{ maxWidth: 680, margin: '0 auto', padding: '12px 12px 80px' }}>
+      <div className="desktop-grid">
+        <SidebarLeft />
+
+        <div className="main-content-desktop">
         <MembersOnlineRow />
 
         {/* Criar post */}
@@ -520,6 +525,9 @@ function FeedContent() {
             <p style={{ fontSize: 14, marginTop: 8 }}>Seja o primeiro a postar algo</p>
           </div>
         ) : posts.map(post => <PostCard key={post.id} post={post} usuarioId={usuario?.id || ''} />)}
+        </div>
+
+        <SidebarRight />
       </div>
       <BottomNav />
     </div>

@@ -60,7 +60,7 @@ export default function MembersOnlineRow() {
           letterSpacing: 1.3, textTransform: 'uppercase',
           color: 'var(--text-muted)', lineHeight: 1,
         }}>
-          Online
+          Online agora
         </div>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 5, marginTop: 3,
