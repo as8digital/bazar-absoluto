@@ -5,23 +5,30 @@ import {
   IconBriefcase, IconNews, IconUser, IconPlus,
 } from './Icons'
 
+type NavItem = {
+  label: string
+  rota: string
+  Icon?: (p: { size?: number; stroke?: number }) => JSX.Element
+  IconActive?: (p: { size?: number; stroke?: number }) => JSX.Element
+  isPostar?: boolean
+}
+
 export default function BottomNav() {
   const router = useRouter()
   const pathname = usePathname()
 
-  const ITENS = [
+  const ITENS: NavItem[] = [
     { label: 'Início',   rota: '/feed',     Icon: IconHome, IconActive: IconHomeFill },
     { label: 'Empregos', rota: '/empregos', Icon: IconBriefcase },
     { label: 'Postar',   rota: '/feed',     isPostar: true },
     { label: 'Notícias', rota: '/noticias', Icon: IconNews },
     { label: 'Perfil',   rota: '/perfil',   Icon: IconUser },
-  ] as const
+  ]
 
   return (
     <div className="bottomnav">
       {ITENS.map((item) => {
-        const ativo = pathname === item.rota && !('isPostar' in item && item.isPostar)
-        if ('isPostar' in item && item.isPostar) {
+        if (item.isPostar) {
           return (
             <div key={item.label} className="nav-item" onClick={() => router.push(item.rota)}>
               <div style={{
@@ -38,7 +45,10 @@ export default function BottomNav() {
             </div>
           )
         }
-        const IconToUse = ativo && 'IconActive' in item && item.IconActive ? item.IconActive : item.Icon!
+
+        const ativo = pathname === item.rota
+        const IconToUse = (ativo && item.IconActive ? item.IconActive : item.Icon) as NonNullable<NavItem['Icon']>
+
         return (
           <div
             key={item.label}
