@@ -154,6 +154,3 @@ export const IconArrowRight = (p: IconProps) => (
 export const IconMenu = (p: IconProps) => (
   <Svg {...p}><path d="M4 7h16M4 12h16M4 17h16"/></Svg>
 )
-export const IconMore = (p: IconProps) => (
-  <Svg {...p}><circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/></Svg>
-)
